@@ -1,13 +1,19 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseDBEntity } from '../../../../core/postgres_db_entities/baseDBEntity';
 import { Profile } from '../../../../core/postgres_db_entities/profile.entity';
+import { InputWalletDto, Wallet } from './wallet.entity';
+import { ForbiddenException } from '@nestjs/common';
 
 @Entity()
 export class Client extends BaseDBEntity{
-    @Column()
+    // это нам не надо, т.к. мы экстендимся от базового типа в котором это есть уже
+    // @PrimaryGeneratedColumn()
+    // id: number;
+
+    @Column({unique: true}) // это индекс
     firstName: string;
 
-    @Column()
+    @Column({type: 'text'})
     lastName: string;
 
     @Column({nullable: true })
