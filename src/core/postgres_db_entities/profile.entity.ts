@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { BaseDBEntity } from './baseDBEntity';
-import { Client } from '../../modules/user-accounts/domain/postgres_entities/user.entity';
+import { Client } from '../../modules/user-accounts/domain/typeorm_postgres_entities/user.entity';
 
 @Entity()
 export class Profile extends BaseDBEntity {

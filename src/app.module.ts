@@ -40,8 +40,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
                     ssl: {
                         rejectUnauthorized: false, // Необходим для Neon/Supabase
                     },
-                    autoLoadEntities: false, // надо поменять на true убдет когда будем полноценно использовать TypeORM
-                    synchronize: false, // надо поменять на true убдет когда будем полноценно использовать TypeORM
+                    autoLoadEntities: true, // надо поменять на true убдет когда будем полноценно использовать TypeORM
+                    synchronize: true, // надо поменять на true убдет когда будем полноценно использовать TypeORM
+                    logging: true,
                 };
             },
         }),

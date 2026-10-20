@@ -1,4 +1,13 @@
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn, DeleteDateColumn,
+    Entity,
+    Index,
+    OneToMany,
+    OneToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 import { BaseDBEntity } from '../../../../core/postgres_db_entities/baseDBEntity';
 import { Profile } from '../../../../core/postgres_db_entities/profile.entity';
 import { InputWalletDto, Wallet } from './wallet.entity';
@@ -96,4 +105,55 @@ export class Client extends BaseDBEntity{
         this.wallets.push(wallet)
         return wallet;
     }
+}
+
+
+@Entity('users')
+// Переносим частичный уникальный индекс из SQL в декоратор
+@Index('idx_users_recovery_code_unique', ['recoveryCode'], {
+    unique: true,
+    where: 'recovery_code IS NOT NULL',
+})
+export class UserEntity {
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    @Column({ type: 'varchar', length: 255, unique: true })
+    login: string;
+
+    @Column({ type: 'varchar', length: 255, name: 'password_hash' })
+    passwordHash: string;
+
+    @Column({ type: 'varchar', length: 255, unique: true })
+    email: string;
+
+    @Column({ type: 'varchar', length: 255, name: 'first_name' })
+    firstName: string;
+
+    @Column({ type: 'varchar', length: 255, nullable: true, name: 'last_name' })
+    lastName: string | null;
+
+    @Column({ type: 'boolean', default: false, name: 'is_email_confirmed' })
+    isEmailConfirmed: boolean;
+
+    @Column({ type: 'varchar', length: 255, nullable: true, name: 'email_confirmation_code' })
+    emailConfirmationCode: string | null;
+
+    @Column({ type: 'timestamp with time zone', nullable: true, name: 'email_confirmation_expiration_date' })
+    emailConfirmationExpirationDate: Date | null;
+
+    @Column({ type: 'varchar', length: 255, nullable: true, name: 'recovery_code' })
+    recoveryCode: string | null;
+
+    @Column({ type: 'timestamp with time zone', nullable: true, name: 'recovery_code_expiration_date' })
+    recoveryCodeExpirationDate: Date | null;
+
+    @CreateDateColumn({ type: 'timestamp with time zone', name: 'created_at' })
+    createdAt: Date;
+
+    @UpdateDateColumn({ type: 'timestamp with time zone', name: 'updated_at' })
+    updatedAt: Date;
+
+    @DeleteDateColumn({ type: 'timestamp with time zone', nullable: true, name: 'deleted_at' })
+    deletedAt: Date | null;
 }
