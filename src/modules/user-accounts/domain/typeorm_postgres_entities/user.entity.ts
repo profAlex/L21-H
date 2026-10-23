@@ -12,109 +12,107 @@ import { BaseDBEntity } from '../../../../core/postgres_db_entities/baseDBEntity
 import { Profile } from '../../../../core/postgres_db_entities/profile.entity';
 import { InputWalletDto, Wallet } from './wallet.entity';
 import { ForbiddenException } from '@nestjs/common';
+import { UserSession } from './user-session.entity';
 
-@Entity()
-export class Client extends BaseDBEntity{
-    // это нам не надо, т.к. мы экстендимся от базового типа в котором это есть уже
-    // @PrimaryGeneratedColumn()
-    // id: number;
+// @Entity()
+// export class Client extends BaseDBEntity{
+//     // это нам не надо, т.к. мы экстендимся от базового типа в котором это есть уже
+//     // @PrimaryGeneratedColumn()
+//     // id: number;
+//
+//     @Column({unique: true}) // это индекс
+//     firstName: string;
+//
+//     @Column({type: 'text'})
+//     lastName: string;
+//
+//     @Column({nullable: true })
+//     passportNumber: string | null;
+//
+//     @Column()
+//     isMarried: boolean;
+//
+//     @Column()
+//     dob: Date;
+//
+//     @Column()
+//     status: string;
+//
+//     update(dto: any){
+//         if (dto.isMarried && !dto.passportNumber) {
+//             throw new Error('Passport must have if merried')
+//         }
+//
+//         this.firstName = dto.firstName;
+//         this.lastName = dto.lastName;
+//
+//         this.passportNumber = dto.passportNumber;
+//         this.isMarried = dto.isMarried;
+//
+//         if (dto.status === 'vacation')
+//             if (this.wallets.some(w => w.balance < 0)) {
+//                 throw Error('Client can go to vacation because has dept');
+//             }
+//     }
+//
+//     static create(dto: any) {
+//         const client = new Client();
+//
+//         client.firstName = dto.firstName;
+//         client.lastName = dto.lastName;
+//         client.status = 'not-confirmed';
+//         client.isMarried = dto.isMarried;
+//         client.dob = new Date(2000, 10, 1);
+//
+//         client.profile = { // Profile.create
+//             hobby: 'it, js',
+//             education: 'it-incubator',
+//             // user: user // это можно не делать
+//         } as Profile
+//
+//         client.wallets = [
+//             {
+//                 title: 'Main wallet',
+//                 currency: 'USD',
+//                 balance: 1000,
+//                 // owner: client // можем и нет смысла указывать
+//             } as Wallet
+//         ]
+//         return client;
+//     }
+//
+//     // точно хотим засорять юзера профилем?
+//     @OneToOne(() => Profile, (profile) => profile.client, {
+//         cascade: true // благодаря этому мы можем сохраняя юзера применить изменения и на данную сущность
+//     })
+//     profile: Profile;
+//
+//     // точно хотим засорять юзера кошельками?
+//     @OneToMany(() => Wallet, (wallet) => wallet.owner, {
+//         cascade: true // благодаря этому мы можем сохраняя юзера применить изменения и на данную сущность
+//     })
+//     wallets: Wallet[];
+//
+//     // точно хотим засорять юзера кошельками?
+//     // @OneToMany(() => WalletSharing, (walletSharing) => walletSharing.user)
+//     // walletSharings: WalletSharing[];
+//     addNewWallet(createWalletDto: InputWalletDto) {
+//         // this.wallets = [];
+//         if (this.wallets.some(w => w.balance < 0)) {
+//             throw new ForbiddenException('User has negative balance and cannot create a new wallet');
+//         }
+//
+//         const wallet = Wallet.create(createWalletDto)
+//         this.wallets.push(wallet)
+//         return wallet;
+//     }
+// }
 
-    @Column({unique: true}) // это индекс
-    firstName: string;
 
-    @Column({type: 'text'})
-    lastName: string;
-
-    @Column({nullable: true })
-    passportNumber: string | null;
-
-    @Column()
-    isMarried: boolean;
-
-    @Column()
-    dob: Date;
-
-    @Column()
-    status: string;
-
-    update(dto: any){
-        if (dto.isMarried && !dto.passportNumber) {
-            throw new Error('Passport must have if merried')
-        }
-
-        this.firstName = dto.firstName;
-        this.lastName = dto.lastName;
-
-        this.passportNumber = dto.passportNumber;
-        this.isMarried = dto.isMarried;
-
-        if (dto.status === 'vacation')
-            if (this.wallets.some(w => w.balance < 0)) {
-                throw Error('Client can go to vacation because has dept');
-            }
-    }
-
-    static create(dto: any) {
-        const client = new Client();
-
-        client.firstName = dto.firstName;
-        client.lastName = dto.lastName;
-        client.status = 'not-confirmed';
-        client.isMarried = dto.isMarried;
-        client.dob = new Date(2000, 10, 1);
-
-        client.profile = { // Profile.create
-            hobby: 'it, js',
-            education: 'it-incubator',
-            // user: user // это можно не делать
-        } as Profile
-
-        client.wallets = [
-            {
-                title: 'Main wallet',
-                currency: 'USD',
-                balance: 1000,
-                // owner: client // можем и нет смысла указывать
-            } as Wallet
-        ]
-        return client;
-    }
-
-    // точно хотим засорять юзера профилем?
-    @OneToOne(() => Profile, (profile) => profile.client, {
-        cascade: true // благодаря этому мы можем сохраняя юзера применить изменения и на данную сущность
-    })
-    profile: Profile;
-
-    // точно хотим засорять юзера кошельками?
-    @OneToMany(() => Wallet, (wallet) => wallet.owner, {
-        cascade: true // благодаря этому мы можем сохраняя юзера применить изменения и на данную сущность
-    })
-    wallets: Wallet[];
-
-    // точно хотим засорять юзера кошельками?
-    // @OneToMany(() => WalletSharing, (walletSharing) => walletSharing.user)
-    // walletSharings: WalletSharing[];
-    addNewWallet(createWalletDto: InputWalletDto) {
-        // this.wallets = [];
-        if (this.wallets.some(w => w.balance < 0)) {
-            throw new ForbiddenException('User has negative balance and cannot create a new wallet');
-        }
-
-        const wallet = Wallet.create(createWalletDto)
-        this.wallets.push(wallet)
-        return wallet;
-    }
-}
 
 
 @Entity('users')
-// Переносим частичный уникальный индекс из SQL в декоратор
-@Index('idx_users_recovery_code_unique', ['recoveryCode'], {
-    unique: true,
-    where: 'recovery_code IS NOT NULL',
-})
-export class UserEntity {
+export class User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
@@ -156,4 +154,8 @@ export class UserEntity {
 
     @DeleteDateColumn({ type: 'timestamp with time zone', nullable: true, name: 'deleted_at' })
     deletedAt: Date | null;
+
+    // Связь 1:N с таблицей сессий
+    @OneToMany(() => UserSession, (session) => session.user, { cascade: true })
+    sessions: UserSession[];
 }
