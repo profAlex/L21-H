@@ -1,27 +1,24 @@
 import {
     CreateDateColumn,
     DeleteDateColumn,
-    Entity,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
     VersionColumn,
 } from 'typeorm';
 
-@Entity()
-export class BaseDBEntity {
+export abstract class BaseDBEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    // https://typeorm.io/entities#special-columns
-    @CreateDateColumn()
-    public createdAt: Date;
+    @CreateDateColumn({ type: 'timestamptz', nullable: true })
+    public createdAt: Date | null = null;
 
-    @UpdateDateColumn()
-    public updatedAt: Date;
+    @UpdateDateColumn({ type: 'timestamptz', nullable: true })
+    public updatedAt: Date | null = null;
 
-    @DeleteDateColumn()
-    public deletedAt: Date | null;
+    @DeleteDateColumn({type: 'timestamptz' , nullable: true})
+    public deletedAt: Date | null = null;
 
-    @VersionColumn()
-    public version: number;
+    @VersionColumn({ type: 'int' })
+    public version: number = 1;
 }
