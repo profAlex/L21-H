@@ -3,7 +3,7 @@ import { UserAccountsModule } from '../user-accounts/user-accounts.module';
 import { BlogsService } from './blogs/application/blogs.service';
 import { BlogsController } from './blogs/api/blogs.controller';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Blog, BlogSchema } from './blogs/domain/blog.entity';
+import { Blog, BlogSchema } from './blogs/domain/mongoose-blog.entity';
 import { BlogsQueryRepository } from './blogs/infrastructure/query/blogs.query-repository';
 import { Post, PostSchema } from './posts/domain/post.entity';
 import { BlogsCommandRepository } from './blogs/infrastructure/blogs.command-repository';
@@ -53,6 +53,7 @@ import {
 } from './blogs/application/usecases/delete-post-by-blog-id-post-id.usecase';
 import { SaBlogsController } from './blogs/api/sa-blogs.controller';
 import { GetCommentByIdHandler } from './comments/application/usecases/get-comment-by-id.usecase';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 //тут регистрируем провайдеры всех сущностей блоггерской платформы (blogs, posts, comments, etc...)
 @Module({
@@ -69,6 +70,7 @@ import { GetCommentByIdHandler } from './comments/application/usecases/get-comme
             { name: PostLike.name, schema: PostLikeSchema },
         ]),
         MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+        TypeOrmModule.forFeature([]), // здесь надо зарегистрировать сущности-Entity которые мы создаем в соответствующих структурных разделах
 
         UserAccountsModule,
     ],

@@ -1,4 +1,4 @@
-import {Blog} from "./blog.entity";
+import {Blog} from "./mongoose-blog.entity";
 import {CreateBlogDomainDto} from "./dto/create-blog.domain.dto";
 
 describe('Blog Entity', () => {

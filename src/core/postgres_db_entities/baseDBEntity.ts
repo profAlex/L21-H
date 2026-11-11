@@ -7,14 +7,14 @@ import {
 } from 'typeorm';
 
 export abstract class BaseDBEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
-    @CreateDateColumn({ type: 'timestamptz', nullable: true })
-    public createdAt: Date | null = null;
+    @CreateDateColumn({ type: 'timestamptz', nullable: false })
+    public createdAt: Date = new Date(Date.now());
 
-    @UpdateDateColumn({ type: 'timestamptz', nullable: true })
-    public updatedAt: Date | null = null;
+    @UpdateDateColumn({ type: 'timestamptz', nullable: false })
+    public updatedAt: Date = new Date(Date.now());
 
     @DeleteDateColumn({type: 'timestamptz' , nullable: true})
     public deletedAt: Date | null = null;

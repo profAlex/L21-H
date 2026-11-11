@@ -1,7 +1,7 @@
 import { BlogsQueryRepository } from './blogs.query-repository';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
-import { Blog } from '../../domain/blog.entity';
+import { Blog } from '../../domain/mongoose-blog.entity';
 import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { NotFoundException } from '@nestjs/common';
 import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';

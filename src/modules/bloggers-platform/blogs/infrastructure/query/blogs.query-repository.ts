@@ -1,6 +1,6 @@
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { BlogViewDto, SQLBlogViewDto } from '../../api/view-dto/blogs.view-dto';
-import { Blog, BlogDocument, BlogModelType } from '../../domain/blog.entity';
+import { Blog, BlogDocument, BlogModelType } from '../../domain/mongoose-blog.entity';
 // import {FilterQuery, ObjectId} from "mongoose";
 // import { type FilterQuery } from 'mongoose';
 import { GetBlogsQueryParams } from '../../api/input-dto/get-blogs-query-params.input-dto';

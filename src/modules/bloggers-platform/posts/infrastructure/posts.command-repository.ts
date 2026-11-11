@@ -1,5 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { BlogDocument } from '../../blogs/domain/blog.entity';
+import { BlogDocument } from '../../blogs/domain/mongoose-blog.entity';
 import { Post, PostDocument, PostModelType } from '../domain/post.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { LikeStatus } from '../../../../core/enums/like-status.enum';

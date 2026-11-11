@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BlogsService } from './blogs.service';
 import { BlogsCommandRepository } from '../infrastructure/blogs.command-repository';
 import { getModelToken } from '@nestjs/mongoose';
-import { Blog } from '../domain/blog.entity';
+import { Blog } from '../domain/mongoose-blog.entity';
 import { NotFoundException } from '@nestjs/common';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 

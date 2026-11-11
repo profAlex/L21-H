@@ -3,7 +3,7 @@ import {
     UsersExternalQueryRepository
 } from '../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import {UsersExternalService} from '../../../user-accounts/application/users.external-service';
-import {Blog, BlogModelType} from "../domain/blog.entity";
+import {Blog, BlogModelType} from "../domain/mongoose-blog.entity";
 import {InjectModel} from "@nestjs/mongoose";
 import {CreateBlogDto} from "../dto/create-blog.dto";
 import {BlogsCommandRepository} from "../infrastructure/blogs.command-repository";

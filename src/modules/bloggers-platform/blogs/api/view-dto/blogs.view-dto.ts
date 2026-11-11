@@ -37,7 +37,7 @@
 //     websiteUrl: string;
 //     createdAt: Date;
 //     isMembership: boolean;
-import { Blog, BlogDocument } from '../../domain/blog.entity';
+import { Blog, BlogDocument } from '../../domain/mongoose-blog.entity';
 import { Types } from 'mongoose';
 import { SQLBlog } from '../../domain/sql-blog.entity';
 

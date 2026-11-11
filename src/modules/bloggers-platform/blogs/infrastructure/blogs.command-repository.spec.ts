@@ -1,7 +1,7 @@
 import {Test, TestingModule} from "@nestjs/testing";
 import {BlogsCommandRepository} from "./blogs.command-repository";
 import {getModelToken} from "@nestjs/mongoose";
-import {Blog} from "../domain/blog.entity";
+import {Blog} from "../domain/mongoose-blog.entity";
 
 describe('BlogsCommandRepository', () => {
     let repository: BlogsCommandRepository;
