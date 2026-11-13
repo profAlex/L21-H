@@ -72,48 +72,48 @@ export class UsersService {
         return this.usersCommandRepository.findOrNotFoundFail(id);
     }
 
-    async checkIfUserExists(
-        login: string,
-        email: string,
-    ): Promise<'login' | 'email' | null> {
-        return this.usersQueryRepository.checkIfUserExists(login, email);
-    }
-
-    async findUserByLogin(
-        loginOrEmail: string,
-    ): Promise<UserAuthInternalDto | null> {
-        return this.usersQueryRepository.findUserByLogin(loginOrEmail);
-    }
-
-    async findUserByConfirmationCode(
-        confirmationCode: string,
-    ): Promise<UserDocument | null> {
-        return this.usersQueryRepository.findUserByConfirmationCode(
-            confirmationCode,
-        );
-    }
-
-    async findConfirmedUserByEmail(
-        sentEmail: string,
-    ): Promise<UserDocument | null> {
-        return this.usersQueryRepository.findConfirmedUserByEmail(sentEmail);
-    }
-
-    async findUserByRecoveryCode(
-        sentRecoveryCode: string,
-    ): Promise<UserDocument | null> {
-        return this.usersQueryRepository.findUserByRecoveryCode(
-            sentRecoveryCode,
-        );
-    }
-
-    async findNotConfirmedByEmail(
-        sentEmail: string,
-    ): Promise<UserDocument | null> {
-        return this.usersQueryRepository.findNotConfirmedByEmail(sentEmail);
-    }
-
-    async getMeByIdOrNotFoundFail(id: string): Promise<MeViewDto> {
-        return this.usersQueryRepository.getMeByIdOrNotFoundFail(id);
-    }
+    // async checkIfUserExists(
+    //     login: string,
+    //     email: string,
+    // ): Promise<'login' | 'email' | null> {
+    //     return this.usersQueryRepository.checkIfUserExists(login, email);
+    // }
+    //
+    // async findUserByLogin(
+    //     loginOrEmail: string,
+    // ): Promise<UserAuthInternalDto | null> {
+    //     return this.usersQueryRepository.findUserByLogin(loginOrEmail);
+    // }
+    //
+    // async findUserByConfirmationCode(
+    //     confirmationCode: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.usersQueryRepository.findUserByConfirmationCode(
+    //         confirmationCode,
+    //     );
+    // }
+    //
+    // async findConfirmedUserByEmail(
+    //     sentEmail: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.usersQueryRepository.findConfirmedUserByEmail(sentEmail);
+    // }
+    //
+    // async findUserByRecoveryCode(
+    //     sentRecoveryCode: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.usersQueryRepository.findUserByRecoveryCode(
+    //         sentRecoveryCode,
+    //     );
+    // }
+    //
+    // async findNotConfirmedByEmail(
+    //     sentEmail: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.usersQueryRepository.findNotConfirmedByEmail(sentEmail);
+    // }
+    //
+    // async getMeByIdOrNotFoundFail(id: string): Promise<MeViewDto> {
+    //     return this.usersQueryRepository.getMeByIdOrNotFoundFail(id);
+    // }
 }

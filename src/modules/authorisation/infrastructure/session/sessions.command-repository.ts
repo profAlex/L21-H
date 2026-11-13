@@ -1,8 +1,3 @@
-import {
-    Session,
-    SessionDocument,
-    SessionModelType,
-} from '../../domain/session.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -25,13 +20,8 @@ type SoftDeleteSessionsParams = {
 @Injectable()
 export class SessionsCommandRepository {
     constructor(
-        @InjectModel(Session.name) private SessionModel: SessionModelType,
         @InjectDataSource() protected dataSource: DataSource,
     ) {}
-
-    async save(session: SessionDocument): Promise<void> {
-        await session.save();
-    }
 
     async SQLsave(session: SQLUserSession): Promise<void> {
         const query = `
@@ -115,24 +105,6 @@ export class SessionsCommandRepository {
         // CREATE INDEX IF NOT EXISTS "idx_user_sessions_user_id" ON "user_sessions" ("user_id");`);
     }
 
-    async toTestQuery() {
-        return this.dataSource.query(`SELECT *
-                                      FROM public."Profiles"`);
-    }
-
-    async findSessionBySessionId(
-        sessionId: string,
-    ): Promise<SessionDocument | null> {
-        return this.SessionModel.findOne({
-            _id: sessionId,
-            deletedAt: null,
-        }).exec();
-        // Без .exec() Mongoose возвращает так называемый Query (объект-обещание), который ведет себя как Promise,
-        // но им не является. Вызов .exec() превращает его в полноценный нативный JavaScript Promise.
-        // Это дает более чистые и понятные стек-трейсы ошибок (stack traces), если база данных начнет сбоить,
-        // и исключает странные баги с типизацией в некоторых версиях TypeScript.
-    }
-
     async SQLfindSessionBySessionId(
         sessionId: string,
     ): Promise<SQLUserSession | null> {
@@ -158,15 +130,6 @@ export class SessionsCommandRepository {
         }
 
         return SQLUserSession.reconstructInstance(sessionRow);
-    }
-
-    async findSessionByDeviceId(
-        deviceUUID: string,
-    ): Promise<SessionDocument | null> {
-        return this.SessionModel.findOne({
-            deviceUUID: deviceUUID, // проверьте имя поля в схеме (deviceUUID или deviceId)
-            deletedAt: null,
-        }).exec();
     }
 
 
@@ -195,60 +158,5 @@ export class SessionsCommandRepository {
         }
 
         return SQLUserSession.reconstructInstance(sessionRow);
-    }
-
-    // async removeAllButOneSession(
-    //     sessionId: string,
-    //     userId: string,
-    // ): Promise<SessionDocument[] | null> {
-    //     const result = await this.SessionModel.find({
-    //         userId: userId,
-    //         _id: { $ne: sessionId },
-    //     }).exec();
-    //
-    //     // перенести это в соответствующий юзкейс
-    //     // sessions.forEach((session: SessionDocument) => {session.makeDeleted()});
-    //     // await Promise.all(sessions.map((session) => session.save()));
-    //
-    //     return result.length ? result : null;
-    // }
-
-    // это более ресурсосберегающий вариант removeAllButOneSession выше, операция без вызова отдельного .makeDeleted и .save(), т.н. атомарная
-    async softDeleteAllButOneSession({
-        sessionId,
-        userId,
-    }: SoftDeleteSessionsParams): Promise<boolean> {
-        const result = await this.SessionModel.updateMany(
-            {
-                userId: userId,
-                _id: { $ne: new Types.ObjectId(sessionId) },
-                deletedAt: null, // помечаем только те, что еще не были удалены
-            },
-            {
-                $set: { deletedAt: new Date() },
-            },
-        ).exec();
-
-        return result.modifiedCount > 0;
-    }
-
-    async SQLsoftDeleteAllButOneSession({
-        sessionId,
-        userId,
-    }: SoftDeleteSessionsParams): Promise<boolean> {
-        const query = `
-            UPDATE public."user_sessions"
-            SET "deleted_at" = NOW()
-            WHERE "user_id" = $1
-              AND "id" <> $2
-              AND "deleted_at" IS NULL RETURNING "id";
-        `;
-
-        const updatedRows = await this.dataSource.query<{ id: string }[]>(
-            query,
-            [userId, sessionId],
-        );
-
-        return updatedRows.length > 0;
     }
 }

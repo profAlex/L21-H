@@ -2,15 +2,9 @@ import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostsCommandRepository } from '../../infrastructure/posts.command-repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreatePostLikeDto } from '../../dto/create-post-like.dto';
-import {
-    PostLike,
-    PostLikeModelType,
-} from '../../../likes/domain/post-like.entity';
 import { PostLikesCommandRepository } from '../../../likes/infrastructure/post-likes.command-repostory';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import { PostLikesQueryRepository } from '../../../likes/infrastructure/query/post-likes.query-repository';
-import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 
 // <void> - This type represents the command execution result
 export class ChangePostLikeStatus extends Command<void> {
@@ -22,7 +16,6 @@ export class ChangePostLikeStatus extends Command<void> {
 @CommandHandler(ChangePostLikeStatus)
 export class ChangePostLikeStatusHandler implements ICommandHandler<ChangePostLikeStatus> {
     constructor(
-        @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
         private postLikesCommandRepository: PostLikesCommandRepository,
         private postsCommandRepository: PostsCommandRepository,
     ) {}

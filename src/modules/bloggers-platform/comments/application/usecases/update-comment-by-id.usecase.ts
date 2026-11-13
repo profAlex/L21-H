@@ -1,7 +1,5 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../../domain/comment.entity';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
@@ -20,7 +18,6 @@ export class UpdateCommentById extends Command<void> {
 export class UpdateCommentByIdHandler implements ICommandHandler<UpdateCommentById> {
     constructor(
         private usersExternalQueryRepository: UsersExternalQueryRepository,
-        @InjectModel(Comment.name) private CommentModel: CommentModelType,
         private commentsCommandRepository: CommentsCommandRepository,
     ) {}
 

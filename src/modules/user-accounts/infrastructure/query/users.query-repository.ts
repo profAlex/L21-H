@@ -1,4 +1,4 @@
-import { User, UserDocument, UserModelType } from '../../domain/user.entity';
+import { UserDocument, UserModelType } from '../../domain/user.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { SQLUserViewDto, UserViewDto } from '../../api/view-dto/users.view-dto';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -15,7 +15,9 @@ import { UserAuthInternalDto } from '../../../authorisation/dto/internal-dto/use
 import { MeViewDto, SQLMeViewDto } from '../../../authorisation/api/view-dto/me.view-dto';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
-import { DataSource } from 'typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../../domain/type-orm-user.entity';
 
 interface UserDbRow {
     id: string;
@@ -27,9 +29,11 @@ interface UserDbRow {
 @Injectable()
 export class UsersQueryRepository {
     constructor(
-        @InjectModel(User.name)
-        private UserModel: UserModelType,
+        // @InjectModel(User.name)
+        // private UserModel: UserModelType,
         private readonly dataSource: DataSource,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>
     ) {}
 
     // async getByIdOrNotFoundFail(id: string): Promise<UserViewDto> {
@@ -66,22 +70,22 @@ export class UsersQueryRepository {
         return SQLUserViewDto.mapFromDbRow(user);
     }
 
-    async getMeByIdOrNotFoundFail(id: string): Promise<MeViewDto> {
-        const user = await this.UserModel.findOne({
-            _id: id,
-            deletedAt: null,
-        }).lean();
-
-        if (!user) {
-            // throw new NotFoundException('user not found');
-            throw new DomainException({
-                code: DomainExceptionCode.UserNotFound,
-                message: 'User not found',
-            });
-        }
-
-        return MeViewDto.mapToView(user);
-    }
+    // async getMeByIdOrNotFoundFail(id: string): Promise<MeViewDto> {
+    //     const user = await this.UserModel.findOne({
+    //         _id: id,
+    //         deletedAt: null,
+    //     }).lean();
+    //
+    //     if (!user) {
+    //         // throw new NotFoundException('user not found');
+    //         throw new DomainException({
+    //             code: DomainExceptionCode.UserNotFound,
+    //             message: 'User not found',
+    //         });
+    //     }
+    //
+    //     return MeViewDto.mapToView(user);
+    // }
 
     async SQLgetMeByIdOrNotFoundFail(id: string): Promise<SQLMeViewDto> {
         // все алиасы без двойных кавычек принудительно приводятся к нижнему регистру (userid)!
@@ -163,87 +167,64 @@ export class UsersQueryRepository {
     async getAllUsers(
         query: GetUsersQueryParams,
     ): Promise<PaginatedViewDto<SQLUserViewDto>> {
-        // массив SQL-услоий для уточнения поиска WHERE
-        const whereConditions: string[] = ['deleted_at IS NULL'];
-        // массив для передачи значений вместо плейсхолдеров $1, $2 и далее, которые будут положены сначала внутрь onConditions,
-        // а затем присоединены к whereConditions
-        const queryParams: any[] = [];
-        // счетчик для нумерации, изменяется в зависимости от наличия переданных query параметров
-        let paramIndex = 1;
+        // создаем экземпляр билдера
+        const queryBuilder = this.userRepository.createQueryBuilder('user');
 
-        // условия $or для поиска по login или email (ILIKE = case-insensitive), присоединяются к whereConditions
-        const orConditions: string[] = [];
+        // Исключаем мягко удаленные (если не используете WithDeleted глобально)
+        queryBuilder.where('user.deleted_at IS NULL');
 
-        // таким образом обеспечивается защита от инъекций - первый массив содержит цифру, которая автоматически
-        // инкрементится, второй массив содержит фактичесое значение квери-паарметра
-        if (query.searchLoginTerm) {
-            orConditions.push(`login ILIKE $${paramIndex}`);
-            queryParams.push(`%${query.searchLoginTerm}%`);
-            paramIndex++;
+        // Условия поиска (OR по login или email, case-insensitive ILIKE)
+        if (query.searchLoginTerm || query.searchEmailTerm) {
+            queryBuilder.andWhere(
+                new Brackets((qb) => {
+                    if (query.searchLoginTerm) {
+                        qb.orWhere('user.login ILIKE :login', { login: `%${query.searchLoginTerm}%` });
+                    }
+                    if (query.searchEmailTerm) {
+                        qb.orWhere('user.email ILIKE :email', { email: `%${query.searchEmailTerm}%` });
+                    }
+                }),
+            );
         }
 
-        if (query.searchEmailTerm) {
-            orConditions.push(`email ILIKE $${paramIndex}`);
-            queryParams.push(`%${query.searchEmailTerm}%`);
-            paramIndex++;
-        }
-
-        // объединяем все квери параметры в общую OR строку и засовываем ее в массив к WHERE
-        // внимание! скобоки очень важны для правильной последовательности вычисления логических операторов
-        if (orConditions.length > 0) {
-            whereConditions.push(`(${orConditions.join(' OR ')})`);
-        }
-
-        // финальный шаг - теперь WHERE массив соединяем в общую AND строку с предыдущей
-        const whereClause = whereConditions.join(' AND ');
-
-        // вспомогательная мапа для защиты от инъекций при выборе ORDER BY (сортировка)
-        // мы тут задаем все возможные корректные допустимые варианты, которые могут существуют по ТЗ
-        // все несоответствиующие т.е. потенциальные инъекции просто не выберутся, т.к. не будут существовать в массиве
+        // Безопасная сортировка (whitelist полей)
         const allowedSortColumns: Record<string, string> = {
-            createdAt: 'created_at',
-            login: 'login',
-            email: 'email',
+            createdAt: 'user.created_at',
+            login: 'user.login',
+            email: 'user.email',
         };
 
-        const sortByColumn = allowedSortColumns[query.sortBy] || 'created_at';
-        const sortDirection = query.sortDirection && query.sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+        const sortByColumn = allowedSortColumns[query.sortBy] || 'user.created_at';
+        const sortDirection = (query.sortDirection && query.sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
 
-        // параметры для условий LIMIT и OFFSET
-        const offset = query.calculateSkip();
-        const limit = query.pageSize;
+        queryBuilder.orderBy(sortByColumn, sortDirection);
 
-        // aормируем SQL-запросы для получения элементов и общего количества
-        const itemsQuery = `
-            SELECT id, login, email, created_at
-            FROM users
-            WHERE ${whereClause}
-            ORDER BY ${sortByColumn} ${sortDirection}
-            LIMIT $${paramIndex}
-            OFFSET $${paramIndex + 1}
-        `;
+        // Пагинация
+        const skip = query.calculateSkip();
+        queryBuilder.skip(skip).take(query.pageSize);
 
-        const countQuery = `
-            SELECT COUNT(*) ::int AS "totalCount"
-            FROM users
-            WHERE ${whereClause}
-        `;
+        // Выбираем нужные поля (чтобы не тянуть лишнее)
+        queryBuilder.select(['user.id', 'user.login', 'user.email', 'user.created_at']);
 
-        // параллельно выполняем оба запроса к базе данных
-        const [usersRows, countResult] = await Promise.all([
-            this.dataSource.query<UserDbRow[]>(itemsQuery, [
-                ...queryParams,
-                limit,
-                offset,
-            ]),
-            this.dataSource.query<{ totalCount: number }[]>(
-                countQuery,
-                queryParams,
-            ),
-        ]);
+        // Параллельно получаем элементы и общее количество
+        const [usersRows, totalCount] = await queryBuilder.getManyAndCount();
 
-        const totalCount = countResult[0]?.totalCount ?? 0;
+        // Маппим в DTO
+        const items = usersRows.map((row) =>
+            SQLUserViewDto.mapFromDbRow({
+                id: row.id,
+                login: row.login,
+                email: row.email,
+                created_at: row.created_at,
+            })
+        );
 
+        return PaginatedViewDto.mapToView({
+            items,
+            totalCount,
+            page: query.pageNumber,
+            size: query.pageSize,
+        });
         // маппим плоские SQL-строки в DTO
         // const items = usersRows.map((row) => ({
         //     id: row.id,
@@ -254,35 +235,26 @@ export class UsersQueryRepository {
         //         : new Date(row.created_at).toISOString(),
         // }));
 
-        // маппим плоские SQL-строки в DTO
-        const items = usersRows.map(SQLUserViewDto.mapFromDbRow);
-
-        return PaginatedViewDto.mapToView({
-            items,
-            totalCount,
-            page: query.pageNumber,
-            size: query.pageSize,
-        });
     }
 
-    async findUserByLogin(
-        loginOrEmail: string,
-    ): Promise<UserAuthInternalDto | null> {
-        const user = await this.UserModel.findOne({
-            $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
-            $and: [{ deletedAt: null }],
-        })
-            .select(
-                '_id email passwordHash login isEmailConfirmed deletedAt name',
-            )
-            .lean();
-
-        if (!user) {
-            return null;
-        }
-
-        return UserAuthInternalDto.mapToView(user);
-    }
+    // async findUserByLogin(
+    //     loginOrEmail: string,
+    // ): Promise<UserAuthInternalDto | null> {
+    //     const user = await this.UserModel.findOne({
+    //         $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
+    //         $and: [{ deletedAt: null }],
+    //     })
+    //         .select(
+    //             '_id email passwordHash login isEmailConfirmed deletedAt name',
+    //         )
+    //         .lean();
+    //
+    //     if (!user) {
+    //         return null;
+    //     }
+    //
+    //     return UserAuthInternalDto.mapToView(user);
+    // }
 
     /* language = SQL */
     async SQLfindUserByLogin(
@@ -306,28 +278,28 @@ export class UsersQueryRepository {
     }
 
 
-    async checkIfUserExists(
-        login: string,
-        email: string,
-    ): Promise<'login' | 'email' | null> {
-        // Проверяем отдельно занят ли логин а потом емейл, т.к. логика платформенных тестов требует указания field: login при отсутствии логина,
-        // поэтмоу разделяем ошибки, но можно попробовать вернуть всегда тут такую ошибку
-        const loginCount = await this.UserModel.countDocuments({
-            login: login,
-            deletedAt: null,
-        });
-        if (loginCount > 0) return 'login';
-
-        // прроверяем, занят ли email
-        const emailCount = await this.UserModel.countDocuments({
-            email: email,
-            deletedAt: null,
-        });
-        if (emailCount > 0) return 'email';
-
-        // ничего не занято
-        return null;
-    }
+    // async checkIfUserExists(
+    //     login: string,
+    //     email: string,
+    // ): Promise<'login' | 'email' | null> {
+    //     // Проверяем отдельно занят ли логин а потом емейл, т.к. логика платформенных тестов требует указания field: login при отсутствии логина,
+    //     // поэтмоу разделяем ошибки, но можно попробовать вернуть всегда тут такую ошибку
+    //     const loginCount = await this.UserModel.countDocuments({
+    //         login: login,
+    //         deletedAt: null,
+    //     });
+    //     if (loginCount > 0) return 'login';
+    //
+    //     // прроверяем, занят ли email
+    //     const emailCount = await this.UserModel.countDocuments({
+    //         email: email,
+    //         deletedAt: null,
+    //     });
+    //     if (emailCount > 0) return 'email';
+    //
+    //     // ничего не занято
+    //     return null;
+    // }
 
     // async checkIfUserExists(login: string, email: string): Promise<boolean> {
     //     return await this.UserModel.countDocuments({
@@ -336,56 +308,56 @@ export class UsersQueryRepository {
     //     })>0;
     // }
 
-    async findUserByConfirmationCode(
-        confirmationCode: string,
-    ): Promise<UserDocument | null> {
-        return this.UserModel.findOne({
-            $and: [
-                { 'emailConfirmationInfo.confirmationCode': confirmationCode },
-                {
-                    'emailConfirmationInfo.expirationDate': {
-                        $gte: new Date(),
-                    },
-                }, //Date.now() в JavaScript возвращает число (таймстамп в миллисекундах, например 1716924800000). Но в схеме Mongoose поле expirationDate имеет тип Date (хранится как полноценный ISODate объект).
-                { deletedAt: null },
-            ],
-        });
-    }
-
-    async findConfirmedUserByEmail(
-        sentEmail: string,
-    ): Promise<UserDocument | null> {
-        return this.UserModel.findOne({
-            $and: [
-                { email: sentEmail },
-                { isEmailConfirmed: true },
-                { deletedAt: null },
-            ],
-        });
-    }
-
-    async findUserByRecoveryCode(
-        sentRevoceryCode: string,
-    ): Promise<UserDocument | null> {
-        return this.UserModel.findOne({
-            $and: [
-                { recoveryCode: sentRevoceryCode },
-                { recoveryCodeExpirationDate: { $gte: new Date() } },
-                { deletedAt: null },
-            ],
-        });
-    }
-
-    async findNotConfirmedByEmail(
-        sentEmail: string,
-    ): Promise<UserDocument | null> {
-        return this.UserModel.findOne({
-            $and: [
-                { email: sentEmail },
-                { isEmailConfirmed: false },
-                { deletedAt: null },
-            ],
-        });
-    }
+    // async findUserByConfirmationCode(
+    //     confirmationCode: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.UserModel.findOne({
+    //         $and: [
+    //             { 'emailConfirmationInfo.confirmationCode': confirmationCode },
+    //             {
+    //                 'emailConfirmationInfo.expirationDate': {
+    //                     $gte: new Date(),
+    //                 },
+    //             }, //Date.now() в JavaScript возвращает число (таймстамп в миллисекундах, например 1716924800000). Но в схеме Mongoose поле expirationDate имеет тип Date (хранится как полноценный ISODate объект).
+    //             { deletedAt: null },
+    //         ],
+    //     });
+    // }
+    //
+    // async findConfirmedUserByEmail(
+    //     sentEmail: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.UserModel.findOne({
+    //         $and: [
+    //             { email: sentEmail },
+    //             { isEmailConfirmed: true },
+    //             { deletedAt: null },
+    //         ],
+    //     });
+    // }
+    //
+    // async findUserByRecoveryCode(
+    //     sentRevoceryCode: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.UserModel.findOne({
+    //         $and: [
+    //             { recoveryCode: sentRevoceryCode },
+    //             { recoveryCodeExpirationDate: { $gte: new Date() } },
+    //             { deletedAt: null },
+    //         ],
+    //     });
+    // }
+    //
+    // async findNotConfirmedByEmail(
+    //     sentEmail: string,
+    // ): Promise<UserDocument | null> {
+    //     return this.UserModel.findOne({
+    //         $and: [
+    //             { email: sentEmail },
+    //             { isEmailConfirmed: false },
+    //             { deletedAt: null },
+    //         ],
+    //     });
+    // }
 
 }

@@ -12,7 +12,7 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { CommentViewDto, SQLCommentViewDto } from './view-dto/comments.view-dto';
+import { SQLCommentViewDto } from './view-dto/comments.view-dto';
 import { CommentsQueryRepository } from '../infrastructure/query/comments.query-repository';
 import { CreatePostApiInputDto } from '../../posts/api/input-dto/create-post.api.input-dto';
 import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
@@ -66,7 +66,7 @@ export class CommentsController {
         //     user.userId,
         // );
 
-        return this.queryBus.execute<CommentViewDto>(
+        return this.queryBus.execute<SQLCommentViewDto>(
             new GetCommentById(commentId, user?.userId),
         );
     }

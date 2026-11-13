@@ -1,11 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-    CommentLike,
-    CommentLikeDocument,
-    CommentLikeModelType,
-} from '../domain/comment-like.entity';
-import { PostLikeDocument } from '../domain/post-like.entity';
 import { LikeStatus } from '../../../../core/enums/like-status.enum';
 import { DataSource } from 'typeorm';
 

@@ -1,8 +1,8 @@
 import { PaginatedViewDto } from '../dto/base.paginated.view-dto';
-import { BlogViewDto } from '../../modules/bloggers-platform/blogs/api/view-dto/blogs.view-dto';
+import { SQLBlogViewDto } from '../../modules/bloggers-platform/blogs/api/view-dto/blogs.view-dto';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class SwaggerBlogsPaginatedViewDto extends PaginatedViewDto<BlogViewDto> {
-    @ApiProperty({ type: [BlogViewDto], description: 'Список блогов' })
-    items!: BlogViewDto[];
+export class SwaggerBlogsPaginatedViewDto extends PaginatedViewDto<SQLBlogViewDto> {
+    @ApiProperty({ type: [SQLBlogViewDto], description: 'Список блогов' })
+    items!: SQLBlogViewDto[];
 }

@@ -22,15 +22,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     //все модули должны быть заимпортированы в корневой модуль, либо напрямую, либо по цепочке (через другие модули)
     imports: [
         CqrsModule.forRoot(), // такое объявление делает его глобальным и шину можно инжектить везде
-        MongooseModule.forRootAsync({
-            inject: [AppConfig],
-            useFactory: async (appConfig: AppConfig) => {
-                return {
-                    uri: appConfig.MONGO_URI,
 
-                };
-            },
-        }),
         TypeOrmModule.forRootAsync({
             inject: [AppConfig],
             useFactory: async (appConfig: AppConfig) => {

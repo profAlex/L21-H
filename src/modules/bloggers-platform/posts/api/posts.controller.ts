@@ -13,19 +13,17 @@ import {
     UseGuards,
 } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { CommentViewDto } from '../../comments/api/view-dto/comments.view-dto';
+import { SQLCommentViewDto } from '../../comments/api/view-dto/comments.view-dto';
 import { GetCommentsQueryParams } from '../../comments/api/input-dto/get-comments-query-params.input-dto';
 import { CommentsService } from '../../comments/application/comments.service';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from './view-dto/posts.view-dto';
-import { PostsService } from '../application/posts.service';
 import { PostsQueryRepository } from '../infrastructure/query/posts.query-repository';
 import { CreatePostApiInputDto } from './input-dto/create-post.api.input-dto';
 import { UpdatePostInputDto } from '../dto/create-post-input.dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetCommentsForSpecificPostId } from '../../comments/application/usecases/get-comments-for-specified-post-id.usecase';
 import { GetAllPosts } from '../application/usecases/get-all-posts.usecase';
-import { CreatePost } from '../application/usecases/create-post.usecase';
 import { GetPostById } from '../application/usecases/get-post-by-id.usecase';
 import { UpdatePostById } from '../application/usecases/update-post-by-id.usecase';
 import { DeletePostById } from '../application/usecases/delete-post-by-id.usecase';
@@ -84,7 +82,7 @@ export class PostsController {
         @Param('postId') postId: string,
         @Query() query: GetCommentsQueryParams,
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<PaginatedViewDto<CommentViewDto>> {
+    ): Promise<PaginatedViewDto<SQLCommentViewDto>> {
         return this.queryBus.execute<GetCommentsForSpecificPostId>(
             new GetCommentsForSpecificPostId(postId, query, user?.userId),
         );
@@ -100,7 +98,7 @@ export class PostsController {
         @Param('postId') postId: string,
         @Body() body: CreateCommentApiInputDto,
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<CommentViewDto> {
+    ): Promise<SQLCommentViewDto> {
         // console.warn('...Entered \'createNewComment\' method, route: \'POST /posts/:postId/comments\'\n');
 
         return this.commandBus.execute<CreateNewComment>(
@@ -156,41 +154,41 @@ export class PostsController {
 
 
 
-
-    // Create new post
-    @ApiOperation({ summary: 'Create new post' })
-    @UseGuards(BasicAuthGuard)
-    @Post()
-    async createPost(
-        @Body() body: CreatePostApiInputDto,
-    ): Promise<PostViewDto> {
-        return this.commandBus.execute<CreatePost>(new CreatePost(body));
-    }
-
-
-
-    // Update existing post by id with InputModel
-    @ApiOperation({ summary: 'Update existing post by id with InputModel' })
-    @ApiParam({ name: 'id' })
-    @UseGuards(BasicAuthGuard)
-    @Put(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async updatePostById(
-        @Param('id') id: string,
-        @Body() body: UpdatePostInputDto,
-    ): Promise<void> {
-        return this.commandBus.execute<UpdatePostById>(
-            new UpdatePostById(id, body),
-        );
-    }
-
-    // Delete post specified by id
-    @ApiOperation({ summary: 'Delete post specified by id' })
-    @ApiParam({ name: 'id' })
-    @UseGuards(BasicAuthGuard)
-    @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async deletePostId(@Param('id') id: string): Promise<void> {
-        return this.commandBus.execute<DeletePostById>(new DeletePostById(id));
-    }
+    //
+    // // Create new post
+    // @ApiOperation({ summary: 'Create new post' })
+    // @UseGuards(BasicAuthGuard)
+    // @Post()
+    // async createPost(
+    //     @Body() body: CreatePostApiInputDto,
+    // ): Promise<PostViewDto> {
+    //     return this.commandBus.execute<CreatePost>(new CreatePost(body));
+    // }
+    //
+    //
+    //
+    // // Update existing post by id with InputModel
+    // @ApiOperation({ summary: 'Update existing post by id with InputModel' })
+    // @ApiParam({ name: 'id' })
+    // @UseGuards(BasicAuthGuard)
+    // @Put(':id')
+    // @HttpCode(HttpStatus.NO_CONTENT)
+    // async updatePostById(
+    //     @Param('id') id: string,
+    //     @Body() body: UpdatePostInputDto,
+    // ): Promise<void> {
+    //     return this.commandBus.execute<UpdatePostById>(
+    //         new UpdatePostById(id, body),
+    //     );
+    // }
+    //
+    // // Delete post specified by id
+    // @ApiOperation({ summary: 'Delete post specified by id' })
+    // @ApiParam({ name: 'id' })
+    // @UseGuards(BasicAuthGuard)
+    // @Delete(':id')
+    // @HttpCode(HttpStatus.NO_CONTENT)
+    // async deletePostId(@Param('id') id: string): Promise<void> {
+    //     return this.commandBus.execute<DeletePostById>(new DeletePostById(id));
+    // }
 }

@@ -1,5 +1,4 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Session, SessionModelType } from '../../domain/session.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { SessionsCommandRepository } from '../../infrastructure/session/sessions.command-repository';
 import { JwtTokenProvider } from '../jwt-token-provider/jwt-token-provider.service';
@@ -29,7 +28,6 @@ export class LoginUserHandler implements ICommandHandler<LoginUser> {
     constructor(
         // private usersExternalQueryRepository: UsersExternalQueryRepository,
         // private postsQueryRepository: PostsQueryRepository,
-        @InjectModel(Session.name) private SessionModel: SessionModelType,
         private sessionsCommandRepository: SessionsCommandRepository,
         private jwtTokenProvider: JwtTokenProvider,
     ) {}

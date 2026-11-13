@@ -1,10 +1,8 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../../domain/comment.entity';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';
 import { CreateNewComment } from './create-new-comment.usecase';
-import { CommentViewDto } from '../../api/view-dto/comments.view-dto';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
@@ -21,7 +19,6 @@ export class DeleteCommentById extends Command<void> {
 export class DeleteCommentByIdHandler implements ICommandHandler<DeleteCommentById> {
     constructor(
         private usersExternalQueryRepository: UsersExternalQueryRepository,
-        @InjectModel(Comment.name) private CommentModel: CommentModelType,
         private commentsCommandRepository: CommentsCommandRepository,
     ) {}
 

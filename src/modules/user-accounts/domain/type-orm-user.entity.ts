@@ -9,31 +9,31 @@ export class User extends BaseDBEntity {
     login: string;
 
     @Column({ type: 'varchar', length: 255, name: 'password_hash', nullable: false })
-    passwordHash: string;
+    password_hash: string;
 
     @Column({ type: 'varchar', length: 255, unique: true, nullable: false })
     email: string;
 
     @Column({ type: 'varchar', length: 255, name: 'first_name', nullable: false })
-    firstName: string;
+    first_name: string;
 
     @Column({ type: 'varchar', length: 255, name: 'last_name', nullable: true })
-    lastName: string | null = null;
+    last_name: string | null = null;
 
     @Column({ type: 'boolean', default: false, name: 'is_email_confirmed', nullable: false })
-    isEmailConfirmed: boolean = false;
+    is_email_confirmed: boolean = false;
 
     @Column({ type: 'varchar', length: 255, name: 'email_confirmation_code', nullable: true })
-    emailConfirmationCode: string | null = null;
+    email_confirmation_code: string | null = null;
 
     @Column({ type: 'timestamptz', name: 'email_confirmation_expiration_date', nullable: true })
-    emailConfirmationExpirationDate: Date | null = null;
+    email_confirmation_expiration_date: Date | null = null;
 
     @Column({ type: 'varchar', length: 255, name: 'recovery_code', nullable: true })
-    recoveryCode: string | null = null;
+    recovery_code: string | null = null;
 
     @Column({ type: 'timestamptz', name: 'recovery_code_expiration_date', nullable: true })
-    recoveryCodeExpirationDate: Date | null = null;
+    recovery_code_expiration_date: Date | null = null;
 
     @OneToMany(() => UserSession, (session) => session.user)
     sessions: UserSession[];

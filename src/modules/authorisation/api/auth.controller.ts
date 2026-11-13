@@ -19,7 +19,7 @@ import { PasswordRecoveryInputDto } from './input-dto/password-recovery.input-dt
 import { NewPasswordInputDto } from './input-dto/new-pasword.input-dto';
 import { RegistrationEmailResendingInputDto } from './input-dto/registration-email-resending.input-dto';
 import { JwtAuthGuard } from '../guards/bearer/jwt.auth-guard';
-import { MeViewDto, SQLMeViewDto } from './view-dto/me.view-dto';
+import { SQLMeViewDto } from './view-dto/me.view-dto';
 import { UserLoginInputDto } from '../../user-accounts/api/input-dto/login-user.input-dto';
 import { Response, Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -197,7 +197,7 @@ export class AuthController {
     @Get('me')
     async requestMe(
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<MeViewDto> {
+    ): Promise<SQLMeViewDto> {
         return this.queryBus.execute<SQLMeViewDto>(
             new GetMeInfoQuery(user.userId),
         );

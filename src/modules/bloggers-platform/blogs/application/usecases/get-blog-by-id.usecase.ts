@@ -1,5 +1,5 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
-import { BlogViewDto, SQLBlogViewDto } from '../../api/view-dto/blogs.view-dto';
+import { SQLBlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { BlogsQueryRepository } from '../../infrastructure/query/blogs.query-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';

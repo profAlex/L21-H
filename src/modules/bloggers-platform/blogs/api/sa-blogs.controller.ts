@@ -1,11 +1,9 @@
 import { BlogsQueryRepository } from '../infrastructure/query/blogs.query-repository';
 import { ApiTags } from '@nestjs/swagger';
-import { BlogsService } from '../application/blogs.service';
-import { PostsService } from '../../posts/application/posts.service';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { BlogViewDto, SQLBlogViewDto } from './view-dto/blogs.view-dto';
+import { SQLBlogViewDto } from './view-dto/blogs.view-dto';
 import {
     Body,
     Controller,
@@ -34,7 +32,6 @@ import { CreatePostForBlogCommand } from '../application/usecases/create-post.us
 import { UpdateBlogInputDto } from '../dto/create-blog.dto';
 import { UpdateBlogCommand, UpdateBlogHandler } from '../application/usecases/update-blog-by-id.usecase';
 import { SQLUpdatePostInputDto, UpdatePostInputDto } from '../../posts/dto/create-post-input.dto';
-import { UpdatePostById } from '../../posts/application/usecases/update-post-by-id.usecase';
 import {
     UpdatePostByBlogIdPostIdCommand,
 } from '../application/usecases/update-post-by-blog-id-post-id.usecase';
@@ -46,8 +43,6 @@ import { DeletePostByBlogIdPostIdCommand } from '../application/usecases/delete-
 export class SaBlogsController {
     constructor(
         private blogsQueryRepository: BlogsQueryRepository,
-        private blogsService: BlogsService,
-        private postsService: PostsService,
         private readonly commandBus: CommandBus,
         private readonly queryBus: QueryBus,
     ) {

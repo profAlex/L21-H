@@ -13,7 +13,6 @@ import { SecurityController } from './api/security.controller';
 
 @Module({
     imports: [
-        MongooseModule.forFeature([{ name: Session.name, schema: SessionSchema }]),
     ],
     controllers: [SecurityController],
     providers: [

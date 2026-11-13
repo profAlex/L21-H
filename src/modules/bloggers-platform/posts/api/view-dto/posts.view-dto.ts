@@ -25,7 +25,6 @@
 // // };
 
 import { LikeStatus } from '../../../../../core/enums/like-status.enum';
-import { Post } from '../../domain/post.entity';
 import { Types } from 'mongoose';
 import { likeInfoQueryRawDto, PostQueryRawDto } from '../../infrastructure/query/posts.query-repository';
 
@@ -102,10 +101,10 @@ export class PostViewDto {
     };
 
     constructor(
-        post: Post & { _id: Types.ObjectId },
+        post: PostQueryRawDto,
         myStatus: LikeStatus = LikeStatus.None,
     ) {
-        this.id = post.id || post._id?.toString();
+        this.id = post.id;
         this.title = post.title;
         this.shortDescription = post.shortDescription;
         this.content = post.content;
@@ -122,12 +121,12 @@ export class PostViewDto {
         // Это гарантирует, что PostViewDto — это абсолютно независимый снимок данных,
         // который можно безопасно отправлять фронту
         this.extendedLikesInfo = {
-            likesCount: post.extendedLikesInfo.likesCount,
-            dislikesCount: post.extendedLikesInfo.dislikesCount,
+            likesCount: post.likesCount,
+            dislikesCount: post.dislikesCount,
             myStatus: myStatus,
 
             // Безопасно маппим массив, если он есть, создавая новые независимые объекты
-            newestLikes: Array.isArray(post.extendedLikesInfo.newestLikes)
+            newestLikes: Array.isArray(post.newestLikes)
                 ? post.extendedLikesInfo.newestLikes.map((like: any) => ({
                       addedAt:
                           like.addedAt instanceof Date
@@ -142,7 +141,7 @@ export class PostViewDto {
 
     // Статический метод теперь просто вызывает конструктор
     static mapToView(
-        post: Post & { _id: Types.ObjectId },
+        post: PostQueryRawDto,
         myStatus: LikeStatus = LikeStatus.None,
     ): PostViewDto {
         return new PostViewDto(post, myStatus);

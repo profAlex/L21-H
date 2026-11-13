@@ -2,10 +2,7 @@
 import { CreatePostLikeDto } from '../../../posts/dto/create-post-like.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateCommentLikeDto } from '../../dto/create-comment-like.dto';
-import {
-    CommentLike,
-    CommentLikeModelType,
-} from '../../../likes/domain/comment-like.entity';
+
 import { InjectModel } from '@nestjs/mongoose';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';

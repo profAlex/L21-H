@@ -1,11 +1,11 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
-import { CommentViewDto, SQLCommentViewDto } from '../../api/view-dto/comments.view-dto';
+import { SQLCommentViewDto } from '../../api/view-dto/comments.view-dto';
 import { CommentsQueryRepository } from '../../infrastructure/query/comments.query-repository';
 import { CommentLikesQueryRepository } from '../../../likes/infrastructure/query/comment-likes.query-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
-export class GetCommentById extends Query<CommentViewDto> {
+export class GetCommentById extends Query<SQLCommentViewDto> {
     constructor(
         public readonly commentId: string,
         public readonly userId: string | undefined,

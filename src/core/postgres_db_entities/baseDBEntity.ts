@@ -11,13 +11,13 @@ export abstract class BaseDBEntity {
     id: string;
 
     @CreateDateColumn({ type: 'timestamptz', nullable: false })
-    public createdAt: Date = new Date(Date.now());
+    public created_at: Date = new Date(Date.now());
 
     @UpdateDateColumn({ type: 'timestamptz', nullable: false })
-    public updatedAt: Date = new Date(Date.now());
+    public updated_at: Date = new Date(Date.now());
 
     @DeleteDateColumn({type: 'timestamptz' , nullable: true})
-    public deletedAt: Date | null = null;
+    public deleted_at: Date | null = null;
 
     @VersionColumn({ type: 'int' })
     public version: number = 1;

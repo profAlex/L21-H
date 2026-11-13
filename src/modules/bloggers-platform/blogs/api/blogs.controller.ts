@@ -20,14 +20,13 @@ import {
 } from '@nestjs/common';
 import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { BlogViewDto, SQLBlogViewDto } from './view-dto/blogs.view-dto';
+import { SQLBlogViewDto } from './view-dto/blogs.view-dto';
 import { SwaggerBlogsPaginatedViewDto } from '../../../../core/swagger/blogs.paginated-view-schema';
 import { CreateBlogInputDto } from './input-dto/blogs.input-dto';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 
 import { BlogsService } from '../application/blogs.service';
-import { PostsService } from '../../posts/application/posts.service';
 
 import { BlogsQueryRepository } from '../infrastructure/query/blogs.query-repository';
 import { CreateBlogPostInputDto } from './input-dto/create-blog-post.input-dto';
@@ -61,7 +60,6 @@ export class BlogsController {
     constructor(
         private blogsQueryRepository: BlogsQueryRepository,
         private blogsService: BlogsService,
-        private postsService: PostsService,
         private readonly commandBus: CommandBus,
         private readonly queryBus: QueryBus,
     ) {
@@ -131,52 +129,52 @@ export class BlogsController {
 
 
 
-
-    // Create new blog
-    @UseGuards(BasicAuthGuard)
-    @Post()
-    @HttpCode(HttpStatus.CREATED)
-    async createNewBlog(
-        @Body() body: CreateBlogInputDto,
-    ): Promise<BlogViewDto> {
-        const blogId = await this.blogsService.createNewBlog(body);
-
-        return this.blogsQueryRepository.getBlogByIdOrNotFoundFail(blogId);
-    }
-
-
-    // Create new post for specific blog
-    @UseGuards(BasicAuthGuard)
-    @Post(':blogId/posts')
-    @HttpCode(HttpStatus.CREATED)
-    async createPostByBlogId(
-        @Param('blogId') blogId: string,
-        @Body() body: CreateBlogPostInputDto,
-    ): Promise<PostViewDto> {
-        return this.postsService.createPostByBlogId({ blogId, body });
-    }
-
-
-
-    // Update existing Blog by id with InputModel
-    @UseGuards(BasicAuthGuard)
-    @Put(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async updateBlogById(
-        @Param('id') id: string,
-        @Body() body: UpdateBlogInputDto,
-    ): Promise<void> {
-        return this.blogsService.updateBlogById({
-            blogId: id,
-            ...body,
-        });
-    }
-
-    // Delete blog specified by id
-    @UseGuards(BasicAuthGuard)
-    @Delete(':id')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteBlogById(@Param('id') id: string): Promise<void> {
-        return this.blogsService.deleteBlogById(id);
-    }
+    //
+    // // Create new blog
+    // @UseGuards(BasicAuthGuard)
+    // @Post()
+    // @HttpCode(HttpStatus.CREATED)
+    // async createNewBlog(
+    //     @Body() body: CreateBlogInputDto,
+    // ): Promise<SQLBlogViewDto> {
+    //     const blogId = await this.blogsService.createNewBlog(body);
+    //
+    //     return this.blogsQueryRepository.getBlogByIdOrNotFoundFail(blogId);
+    // }
+    //
+    //
+    // // Create new post for specific blog
+    // @UseGuards(BasicAuthGuard)
+    // @Post(':blogId/posts')
+    // @HttpCode(HttpStatus.CREATED)
+    // async createPostByBlogId(
+    //     @Param('blogId') blogId: string,
+    //     @Body() body: CreateBlogPostInputDto,
+    // ): Promise<PostViewDto> {
+    //     return this.postsService.createPostByBlogId({ blogId, body });
+    // }
+    //
+    //
+    //
+    // // Update existing Blog by id with InputModel
+    // @UseGuards(BasicAuthGuard)
+    // @Put(':id')
+    // @HttpCode(HttpStatus.NO_CONTENT)
+    // async updateBlogById(
+    //     @Param('id') id: string,
+    //     @Body() body: UpdateBlogInputDto,
+    // ): Promise<void> {
+    //     return this.blogsService.updateBlogById({
+    //         blogId: id,
+    //         ...body,
+    //     });
+    // }
+    //
+    // // Delete blog specified by id
+    // @UseGuards(BasicAuthGuard)
+    // @Delete(':id')
+    // @HttpCode(HttpStatus.NO_CONTENT)
+    // async deleteBlogById(@Param('id') id: string): Promise<void> {
+    //     return this.blogsService.deleteBlogById(id);
+    // }
 }

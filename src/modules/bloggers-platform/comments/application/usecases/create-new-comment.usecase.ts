@@ -1,9 +1,7 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { CommentViewDto } from '../../api/view-dto/comments.view-dto';
 import { CreateCommentApiInputDto } from '../../api/input-dto/create-comment.api.input-dto';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../../domain/comment.entity';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';
 import { UserAccessTokenContextDto } from '../../../../authorisation/guards/dto/user-access-token-context.dto';
 import { PostsQueryRepository } from '../../../posts/infrastructure/query/posts.query-repository';
@@ -11,8 +9,9 @@ import { DomainException } from '../../../../../core/exceptions/domain-exception
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { SQLComment } from '../../domain/sql-comment.entity';
 import { CommentsQueryRepository } from '../../infrastructure/query/comments.query-repository';
+import { SQLCommentViewDto } from '../../api/view-dto/comments.view-dto';
 
-export class CreateNewComment extends Command<CommentViewDto> {
+export class CreateNewComment extends Command<SQLCommentViewDto> {
     constructor(
         public readonly postId: string,
         public readonly body: CreateCommentApiInputDto,
@@ -27,7 +26,6 @@ export class CreateNewCommentHandler implements ICommandHandler<CreateNewComment
     constructor(
         private usersExternalQueryRepository: UsersExternalQueryRepository,
         private postsQueryRepository: PostsQueryRepository,
-        @InjectModel(Comment.name) private CommentModel: CommentModelType,
         private commentsCommandRepository: CommentsCommandRepository,
         private commentsQueryRepository: CommentsQueryRepository,
     ) {}
@@ -36,7 +34,7 @@ export class CreateNewCommentHandler implements ICommandHandler<CreateNewComment
         postId,
         body,
         userId,
-    }: CreateNewComment): Promise<CommentViewDto> {
+    }: CreateNewComment): Promise<SQLCommentViewDto> {
 
         if (!(await this.postsQueryRepository.SQLifPostExists(postId))) {
             throw new DomainException({

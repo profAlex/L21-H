@@ -1,6 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CommentatorInfo } from '../../domain/commentator-info.schema';
-import { LikesInfo } from '../../domain/likes-info.schema';
 import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateCommentApiInputDto {

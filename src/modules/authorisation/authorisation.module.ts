@@ -9,21 +9,17 @@ import { LocalStrategy } from './guards/local/local.strategy';
 import { JwtStrategy } from './guards/bearer/jwt.strategy';
 import { UsersService } from '../user-accounts/application/users.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from '../user-accounts/domain/user.entity';
 import { UsersCommandRepository } from '../user-accounts/infrastructure/users.command-repository';
 import { UsersQueryRepository } from '../user-accounts/infrastructure/query/users.query-repository';
-import { ConfigService } from '@nestjs/config';
 import { AppConfig } from '../../core/app.config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { JwtTokenProvider } from './application/jwt-token-provider/jwt-token-provider.service';
-import { Session, SessionSchema } from './domain/session.entity';
 import { LoginUserHandler } from './application/usecases/login-user.usecase';
 import { SessionsCommandRepository } from './infrastructure/session/sessions.command-repository';
 import { SessionsQueryRepository } from './infrastructure/session/query/sessions.query-repository';
 import { RefreshTokenHandler } from './application/usecases/refresh-token.usecase';
 import { LogoutHandler } from './application/usecases/logout.usecase';
 import { BasicAuthStrategy } from './guards/basic/basic.strategy';
-import { JwtRefreshAuthGuard } from './guards/refresh-token/refresh-token.auth-guard';
 import { JwtRefreshTokenStrategy } from './guards/refresh-token/refresh-token.strategy';
 import { TestQueryHandler } from './application/usecases/test-query.usecase';
 import { TestCreateDbHandler } from './application/usecases/test-create-db.usecase';
@@ -50,13 +46,6 @@ import { GetMeInfoQueryHandler } from './application/usecases/get-me-info.usecas
                 // signOptions: { expiresIn: `${appConfig.ACCESS_TOKEN_LIFETIME}s` },
             }),
         }),
-        MongooseModule.forFeature([
-            { name: User.name, schema: UserSchema },
-            {
-                name: Session.name,
-                schema: SessionSchema,
-            },
-        ]),
         NotificationsModule,
         UserAccountsModule,
         ThrottlerModule.forRootAsync({

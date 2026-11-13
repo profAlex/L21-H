@@ -1,19 +1,12 @@
 import {Injectable} from "@nestjs/common";
-import {Blog, BlogDocument, BlogModelType} from "../domain/mongoose-blog.entity";
-import {InjectModel} from "@nestjs/mongoose";
 import { SQLBlog } from '../domain/sql-blog.entity';
 import { DataSource } from 'typeorm';
 
 @Injectable()
 export class BlogsCommandRepository {
-    constructor(@InjectModel(Blog.name)
-                private BlogModel: BlogModelType,
+    constructor(
                 private readonly dataSource: DataSource,
     ){}
-
-    async save(blog: BlogDocument): Promise<void> {
-        await blog.save();
-    }
 
     // async SQLsave(blog: SQLBlog): Promise<void> {
     //     const query = `
@@ -133,9 +126,5 @@ export class BlogsCommandRepository {
 
         // восстанавливаем полноценный класс SQLBlog с методами
         return SQLBlog.reconstructInstance(raw);
-    }
-
-    async getBlogDocumentById(blogId: string): Promise<BlogDocument | null> {
-        return this.BlogModel.findOne({_id: blogId, deletedAt: null});
     }
 }
