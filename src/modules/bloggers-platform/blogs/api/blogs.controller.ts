@@ -22,22 +22,14 @@ import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dt
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { SQLBlogViewDto } from './view-dto/blogs.view-dto';
 import { SwaggerBlogsPaginatedViewDto } from '../../../../core/swagger/blogs.paginated-view-schema';
-import { CreateBlogInputDto } from './input-dto/blogs.input-dto';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
-import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
-
-import { BlogsService } from '../application/blogs.service';
-
+import { SQLPostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import { BlogsQueryRepository } from '../infrastructure/query/blogs.query-repository';
-import { CreateBlogPostInputDto } from './input-dto/create-blog-post.input-dto';
-import { UpdateBlogInputDto } from '../dto/create-blog.dto';
-import { BasicAuthGuard } from '../../../authorisation/guards/basic/basic.auth-guard';
 import { JwtOptionalAuthGuard } from '../../../authorisation/guards/bearer/jwt.auth-guard';
 import { ExtractUserIfExistsFromRequest } from '../../../authorisation/decorators/extract-user-if-exists.decorator';
 import { UserAccessTokenContextDto } from '../../../authorisation/guards/dto/user-access-token-context.dto';
 import {
     GetPostsByBlogIdQuery,
-    GetPostsByBlogIdQueryHandler,
 } from '../application/usecases/get-posts-by-blog-id.usecase';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetBlogByIdQuery } from '../application/usecases/get-blog-by-id.usecase';
@@ -59,8 +51,6 @@ import { GetBlogByIdQuery } from '../application/usecases/get-blog-by-id.usecase
 export class BlogsController {
     constructor(
         private blogsQueryRepository: BlogsQueryRepository,
-        private blogsService: BlogsService,
-        private readonly commandBus: CommandBus,
         private readonly queryBus: QueryBus,
     ) {
         console.log('BlogsController created');
@@ -97,7 +87,7 @@ export class BlogsController {
     })
     @ApiParam({ name: 'blogId' }) //для сваггера
     // TODO: надо сделать плоский класс чтобы swagger подхватил то тчо внутри items[] находится, по аналогии с SwaggerBlogsPaginatedViewDto
-    @ApiOkResponse({ type: PaginatedViewDto<PostViewDto> })
+    @ApiOkResponse({ type: PaginatedViewDto<SQLPostViewDto> })
     @UseGuards(JwtOptionalAuthGuard)
     @Get(':blogId/posts')
     @HttpCode(HttpStatus.OK)
@@ -105,8 +95,8 @@ export class BlogsController {
         @Param('blogId') blogId: string,
         @Query() query: GetPostsQueryParams,
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<PaginatedViewDto<PostViewDto>> {
-        return this.queryBus.execute<PaginatedViewDto<PostViewDto>>(
+    ): Promise<PaginatedViewDto<SQLPostViewDto>> {
+        return this.queryBus.execute<PaginatedViewDto<SQLPostViewDto>>(
             new GetPostsByBlogIdQuery(blogId, query, user?.userId),
         );
     }
@@ -150,7 +140,7 @@ export class BlogsController {
     // async createPostByBlogId(
     //     @Param('blogId') blogId: string,
     //     @Body() body: CreateBlogPostInputDto,
-    // ): Promise<PostViewDto> {
+    // ): Promise<SQLPostViewDto> {
     //     return this.postsService.createPostByBlogId({ blogId, body });
     // }
     //

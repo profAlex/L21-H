@@ -131,7 +131,7 @@
 // } from './modules/bloggers-platform/likes/domain/post-like.entity';
 // import { HydratedDocument } from 'mongoose';
 // import { PaginatedViewDto } from './core/dto/base.paginated.view-dto';
-// import { PostViewDto } from './modules/bloggers-platform/posts/api/view-dto/posts.view-dto';
+// import { SQLPostViewDto } from './modules/bloggers-platform/posts/api/view-dto/posts.view-dto';
 //
 // @Injectable()
 // class testingMapping {

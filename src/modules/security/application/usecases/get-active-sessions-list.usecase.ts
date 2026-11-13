@@ -1,7 +1,6 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { SessionsQueryRepository } from '../../../authorisation/infrastructure/session/query/sessions.query-repository';
-import { DeviceViewDto, SQLDeviceViewDto } from '../../api/view-dto/device.view-dto';
-import { Session } from '../../../authorisation/domain/session.entity';
+import { SQLDeviceViewDto } from '../../api/view-dto/device.view-dto';
 
 
 export class GetActiveSessionsList extends Query<SQLDeviceViewDto[]> {

@@ -1,18 +1,8 @@
-import { UserDocument, UserModelType } from '../../domain/user.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { SQLUserViewDto, UserViewDto } from '../../api/view-dto/users.view-dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
-
-// import { FilterQuery } from 'mongoose';
-// import mongoose from 'mongoose';
-// import type { FilterQuery } from 'mongoose'; // Явно указываем, что это тип
-// import mongoose, { Types } from 'mongoose';
-// import { FilterQuery } from 'mongoose/types/inferschematype';
-// import mongoose from 'mongoose';
+import { SQLUserViewDto } from '../../api/view-dto/users.view-dto';
+import { Injectable } from '@nestjs/common';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
-import { UserAuthInternalDto } from '../../../authorisation/dto/internal-dto/users.auth-internal-dto';
-import { MeViewDto, SQLMeViewDto } from '../../../authorisation/api/view-dto/me.view-dto';
+import { SQLMeViewDto } from '../../../authorisation/api/view-dto/me.view-dto';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 import { Brackets, DataSource, Repository } from 'typeorm';
@@ -29,29 +19,10 @@ interface UserDbRow {
 @Injectable()
 export class UsersQueryRepository {
     constructor(
-        // @InjectModel(User.name)
-        // private UserModel: UserModelType,
         private readonly dataSource: DataSource,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>
     ) {}
-
-    // async getByIdOrNotFoundFail(id: string): Promise<UserViewDto> {
-    //     const user = await this.UserModel.findOne({
-    //         _id: id,
-    //         deletedAt: null,
-    //     });
-    //
-    //     if (!user) {
-    //         // throw new NotFoundException('user not found');
-    //         throw new DomainException({
-    //             code: DomainExceptionCode.UserNotFound,
-    //             message: 'User not found',
-    //         });
-    //     }
-    //
-    //     return UserViewDto.mapToView(user);
-    // }
 
     async SQLgetByIdOrNotFoundFail(id: string): Promise<SQLUserViewDto> {
         const [user] = await this.dataSource.query<UserDbRow[]>(`

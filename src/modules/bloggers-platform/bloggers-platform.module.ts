@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { UserAccountsModule } from '../user-accounts/user-accounts.module';
-import { BlogsService } from './blogs/application/blogs.service';
 import { BlogsController } from './blogs/api/blogs.controller';
 import { BlogsQueryRepository } from './blogs/infrastructure/query/blogs.query-repository';
 import { BlogsCommandRepository } from './blogs/infrastructure/blogs.command-repository';
@@ -13,10 +12,7 @@ import { CommentsQueryRepository } from './comments/infrastructure/query/comment
 import { CommentsCommandRepository } from './comments/infrastructure/comments.command-repository';
 import { GetCommentsForSpecificPostIdHandler } from './comments/application/usecases/get-comments-for-specified-post-id.usecase';
 import { GetAllPostsHandler } from './posts/application/usecases/get-all-posts.usecase';
-import { UpdatePostByIdHandler } from './posts/application/usecases/update-post-by-id.usecase';
 import { GetPostByIdHandler } from './posts/application/usecases/get-post-by-id.usecase';
-import { DeletePostByIdHandler } from './posts/application/usecases/delete-post-by-id.usecase';
-import { UsersExternalQueryRepository } from '../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { CreateNewCommentHandler } from './comments/application/usecases/create-new-comment.usecase';
 import { UpdateCommentByIdHandler } from './comments/application/usecases/update-comment-by-id.usecase';
 import { DeleteCommentByIdHandler } from './comments/application/usecases/delete-comment-by-id.usecase';
@@ -65,12 +61,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         UpdateCommentByIdHandler,
         CreateNewCommentHandler,
         ChangePostLikeStatusHandler,
-        DeletePostByIdHandler,
-        UpdatePostByIdHandler,
         GetPostByIdHandler,
         GetAllPostsHandler,
         GetCommentsForSpecificPostIdHandler,
-        BlogsService,
         BlogsQueryRepository,
         BlogsCommandRepository,
         PostsQueryRepository,
@@ -78,7 +71,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         CommentsService,
         CommentsQueryRepository,
         CommentsCommandRepository,
-        UsersExternalQueryRepository,
         CommentLikesCommandRepository,
         CommentLikesQueryRepository,
         PostLikesCommandRepository,

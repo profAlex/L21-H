@@ -19,6 +19,6 @@ export abstract class BaseDBEntity {
     @DeleteDateColumn({type: 'timestamptz' , nullable: true})
     public deleted_at: Date | null = null;
 
-    @VersionColumn({ type: 'int' })
+    @VersionColumn({ type: 'int', default: 1 })
     public version: number = 1;
 }

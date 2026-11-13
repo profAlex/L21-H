@@ -1,6 +1,7 @@
-import { User, UserDocument } from '../../domain/user.entity';
 import { Types } from 'mongoose';
 import { SQLUser } from '../../domain/sql-user.entitry';
+import { User } from '../../domain/type-orm-user.entity';
+import { UserDbRow } from '../../infrastructure/users.command-repository';
 
 // export class UserViewDto {
 //     id: string;
@@ -21,39 +22,6 @@ import { SQLUser } from '../../domain/sql-user.entitry';
 //         return dto;
 //     }
 // }
-
-interface UserDbRow {
-    id: string;
-    login: string;
-    email: string;
-    created_at: Date;
-}
-
-export class UserViewDto {
-    id: string;
-    login: string;
-    email: string;
-    createdAt: string;
-
-    constructor(user: User & { _id: Types.ObjectId }) {
-        this.email = user.email;
-        this.login = user.login;
-        this.id = user.id || user._id.toString();
-        this.createdAt =
-            user.createdAt instanceof Date
-                ? user.createdAt.toISOString()
-                : new Date(user.createdAt).toISOString();
-
-        // this.firstName = user.name?.firstName;
-        // this.lastName = user.name?.lastName;
-    }
-
-    static mapToView(user: User & { _id: Types.ObjectId }): UserViewDto {
-        return new UserViewDto(user);
-    }
-
-}
-
 
 export class SQLUserViewDto {
     id: string;

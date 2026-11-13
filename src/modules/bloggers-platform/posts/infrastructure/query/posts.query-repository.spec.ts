@@ -5,7 +5,7 @@ import {Test, TestingModule} from "@nestjs/testing";
 import {GetPostsQueryParams} from "../../api/input-dto/get-posts-query-params.input-dto";
 import {SortDirection} from "../../../../../core/dto/base.query-params.input-dto";
 import {PostsSortBy} from "../../api/input-dto/posts-sort-by";
-import {PostViewDto} from "../../api/view-dto/posts.view-dto";
+import {SQLPostViewDto} from "../../api/view-dto/posts.view-dto";
 
 describe('PostsQueryRepository', () => {
     let queryRepository: PostsQueryRepository;
@@ -79,14 +79,14 @@ describe('PostsQueryRepository', () => {
         const totalCountInDb = 2;
 
         // Результат, который "как будто" вернул маппер одного поста
-        const fakeMappedPost = { id: 'p1', title: 'Mapped Title' } as PostViewDto;
+        const fakeMappedPost = { id: 'p1', title: 'Mapped Title' } as SQLPostViewDto;
 
         // Настраиваем цепочку моков Mongoose
         mockQuery.lean.mockResolvedValue(fakePostsFromDb);
         mockPostModel.countDocuments.mockResolvedValue(totalCountInDb);
 
-        // Мокаем PostViewDto.mapToView, чтобы не зависеть от его сложной внутренней логики
-        const spyPostMapper = jest.spyOn(PostViewDto, 'mapToView')
+        // Мокаем SQLPostViewDto.mapToView, чтобы не зависеть от его сложной внутренней логики
+        const spyPostMapper = jest.spyOn(SQLPostViewDto, 'mapToView')
             .mockReturnValue(fakeMappedPost);
 
         // 2. Act (Выполнение действия)

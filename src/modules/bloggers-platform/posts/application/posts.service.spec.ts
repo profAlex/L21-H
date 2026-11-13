@@ -9,7 +9,7 @@ import { Post } from '../domain/post.entity';
 import { GetPostsQueryParams } from '../api/input-dto/get-posts-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { NotFoundException } from '@nestjs/common';
-import { PostViewDto } from '../api/view-dto/posts.view-dto';
+import { SQLPostViewDto } from '../api/view-dto/posts.view-dto';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 
 describe('PostsService', () => {
@@ -111,7 +111,7 @@ describe('PostsService', () => {
 
         // Шпионим за маппером и подменяем его ответ
         const spy = jest
-            .spyOn(PostViewDto, 'mapToView')
+            .spyOn(SQLPostViewDto, 'mapToView')
             .mockReturnValue(expectedView as any);
 
         mockBlogsQueryRepository.getBlogName.mockResolvedValue(fakeBlog);
@@ -143,10 +143,10 @@ describe('PostsService', () => {
     //         content: 'c',
     //     };
     //     const fakePost = { id: 'anyId' };
-    //     const expectedView = {} as PostViewDto;
+    //     const expectedView = {} as SQLPostViewDto;
     //
     //     const spy = jest
-    //         .spyOn(PostViewDto, 'mapToView')
+    //         .spyOn(SQLPostViewDto, 'mapToView')
     //         .mockReturnValue(expectedView as any);
     //
     //     mockBlogsQueryRepository.getBlogName.mockResolvedValue({

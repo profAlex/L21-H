@@ -7,8 +7,6 @@ import { CryptoService } from '../../core/bcrypt/bcrypt.service';
 import { AuthService } from './application/auth.service';
 import { LocalStrategy } from './guards/local/local.strategy';
 import { JwtStrategy } from './guards/bearer/jwt.strategy';
-import { UsersService } from '../user-accounts/application/users.service';
-import { MongooseModule } from '@nestjs/mongoose';
 import { UsersCommandRepository } from '../user-accounts/infrastructure/users.command-repository';
 import { UsersQueryRepository } from '../user-accounts/infrastructure/query/users.query-repository';
 import { AppConfig } from '../../core/app.config';
@@ -29,6 +27,9 @@ import { ConfirmRegistrationHandler } from './application/usecases/registration-
 import { RegisterUserHandler } from './application/usecases/registration.usecase';
 import { ResendRegistrationEmailHandler } from './application/usecases/resend-registration-email.usecase';
 import { GetMeInfoQueryHandler } from './application/usecases/get-me-info.usecase';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../user-accounts/domain/type-orm-user.entity';
+import { UserSession } from './domain/type-orm-session.entity';
 
 @Module({
     imports: [
@@ -46,6 +47,7 @@ import { GetMeInfoQueryHandler } from './application/usecases/get-me-info.usecas
                 // signOptions: { expiresIn: `${appConfig.ACCESS_TOKEN_LIFETIME}s` },
             }),
         }),
+        TypeOrmModule.forFeature([User,UserSession]),
         NotificationsModule,
         UserAccountsModule,
         ThrottlerModule.forRootAsync({
@@ -83,7 +85,6 @@ import { GetMeInfoQueryHandler } from './application/usecases/get-me-info.usecas
         BasicAuthStrategy,
         JwtRefreshTokenStrategy,
         CryptoService,
-        UsersService,
         UsersCommandRepository,
         UsersQueryRepository,
         // AppConfig, // зарегистрировали этот класс в отдельном глобальном модуле CoreConfig

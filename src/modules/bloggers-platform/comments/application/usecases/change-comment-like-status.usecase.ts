@@ -1,15 +1,9 @@
-// <void> - This type represents the command execution result
-import { CreatePostLikeDto } from '../../../posts/dto/create-post-like.dto';
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateCommentLikeDto } from '../../dto/create-comment-like.dto';
-
-import { InjectModel } from '@nestjs/mongoose';
-import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { CommentLikesCommandRepository } from '../../../likes/infrastructure/comment-likes.command-repository';
-import { CommentLikesQueryRepository } from '../../../likes/infrastructure/query/comment-likes.query-repository';
 
 export class ChangeCommentLikeStatus extends Command<void> {
     constructor(public readonly dto: CreateCommentLikeDto) {
@@ -20,7 +14,6 @@ export class ChangeCommentLikeStatus extends Command<void> {
 @CommandHandler(ChangeCommentLikeStatus)
 export class ChangeCommentLikeStatusHandler implements ICommandHandler<ChangeCommentLikeStatus> {
     constructor(
-        // @InjectModel(CommentLike.name)
         private commentLikesCommandRepository: CommentLikesCommandRepository,
         private commentsCommandRepository: CommentsCommandRepository,
     ) {}

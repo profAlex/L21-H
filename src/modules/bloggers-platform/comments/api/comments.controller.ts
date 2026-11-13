@@ -15,7 +15,7 @@ import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { SQLCommentViewDto } from './view-dto/comments.view-dto';
 import { CommentsQueryRepository } from '../infrastructure/query/comments.query-repository';
 import { CreatePostApiInputDto } from '../../posts/api/input-dto/create-post.api.input-dto';
-import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
+import { SQLPostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import { CreateCommentApiInputDto } from './input-dto/create-comment.api.input-dto';
 import { CommentsCommandRepository } from '../infrastructure/comments.command-repository';
 import { CommentsService } from '../application/comments.service';
@@ -24,7 +24,6 @@ import { DomainExceptionCode } from '../../../../core/exceptions/domain-exceptio
 import { UserAccessTokenContextDto } from '../../../authorisation/guards/dto/user-access-token-context.dto';
 import { BasicAuthGuard } from '../../../authorisation/guards/basic/basic.auth-guard';
 import { ExtractUserIfExistsFromRequest } from '../../../authorisation/decorators/extract-user-if-exists.decorator';
-import { DeletePostById } from '../../posts/application/usecases/delete-post-by-id.usecase';
 import { DeleteCommentById } from '../application/usecases/delete-comment-by-id.usecase';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { UpdateCommentById } from '../application/usecases/update-comment-by-id.usecase';

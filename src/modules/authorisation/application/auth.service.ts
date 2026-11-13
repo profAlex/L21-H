@@ -3,7 +3,6 @@ import { UserAccessTokenContextDto } from '../guards/dto/user-access-token-conte
 import { CryptoService } from '../../../core/bcrypt/bcrypt.service';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../notifications/email.service';
-import { UsersService } from '../../user-accounts/application/users.service';
 import { UUIDGeneratorUtil } from '../../../core/uuid-generation/uuid.service';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
@@ -12,7 +11,6 @@ import { UsersQueryRepository } from '../../user-accounts/infrastructure/query/u
 @Injectable()
 export class AuthService {
     constructor(
-        private usersService: UsersService,
         private usersQueryRepository: UsersQueryRepository,
         private cryptoService: CryptoService,
         private jwtService: JwtService,

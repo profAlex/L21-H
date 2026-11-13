@@ -5,22 +5,22 @@ import { BaseDBEntity } from '../../../core/postgres_db_entities/baseDBEntity';
 @Entity('user_sessions')
 export class UserSession extends BaseDBEntity {
     @Column({ type: 'uuid', name: 'user_id', nullable: false })
-    userId: string;
+    user_id: string;
 
     @Column({ type: 'uuid', name: 'device_uuid', nullable: false })
-    deviceUuid: string;
+    device_uuid: string;
 
     @Column({ type: 'varchar', length: 255, name: 'device_name', nullable: false })
-    deviceName: string;
+    device_name: string;
 
     @Column({ type: 'varchar', length: 45, name: 'device_ip', nullable: false })
-    deviceIp: string;
+    device_ip: string;
 
     @Column({ type: 'timestamptz', name: 'issued_at', nullable: false })
-    issuedAt: Date;
+    issued_at: Date;
 
     @Column({ type: 'timestamptz', name: 'expires_at', nullable: false })
-    expiresAt: Date;
+    expires_at: Date;
 
     @ManyToOne(() => User, (user) => user.sessions, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })

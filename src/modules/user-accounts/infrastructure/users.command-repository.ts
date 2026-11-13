@@ -1,5 +1,4 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
@@ -7,7 +6,7 @@ import { DataSource } from 'typeorm';
 import { SQLUser } from '../domain/sql-user.entitry';
 
 
-interface UserDbRow {
+export interface UserDbRow {
     id: string;
     login: string;
     email: string;
@@ -15,29 +14,26 @@ interface UserDbRow {
 }
 
 
-
-
 @Injectable()
 export class UsersCommandRepository {
     //инжектирование модели через DI
     constructor(
-        @InjectModel(User.name) private UserModel: UserModelType,
         private readonly dataSource: DataSource,
     ) {}
 
-    async findById(id: string): Promise<UserDocument | null> {
-        return this.UserModel.findOne({
-            _id: id,
-            deletedAt: null,
-        });
-    }
-
-    async save(user: UserDocument) {
-        // console.log("<----------------TEST HERE 5");
-
-        await user.save();
-        // console.log("<----------------TEST HERE 6");
-    }
+    // async findById(id: string): Promise<UserDocument | null> {
+    //     return this.UserModel.findOne({
+    //         _id: id,
+    //         deletedAt: null,
+    //     });
+    // }
+    //
+    // async save(user: UserDocument) {
+    //     // console.log("<----------------TEST HERE 5");
+    //
+    //     await user.save();
+    //     // console.log("<----------------TEST HERE 6");
+    // }
 
 
     /* language=PostgreSQL */
@@ -89,19 +85,6 @@ export class UsersCommandRepository {
         await this.dataSource.query(query, queryParams);
     }
 
-    async findOrNotFoundFail(id: string): Promise<UserDocument> {
-        const user = await this.UserModel.findOne({ _id: id, deletedAt: null });
-
-        if (!user) {
-            // throw new NotFoundException('user not found');
-            throw new DomainException({
-                code: DomainExceptionCode.UserNotFound,
-                message: 'User not found',
-            });
-        }
-
-        return user;
-    }
 
     async SQLfindUserById(id: string): Promise<SQLUser | null> {
         const [userRow] = await this.dataSource.query<UserDbRow[]>(

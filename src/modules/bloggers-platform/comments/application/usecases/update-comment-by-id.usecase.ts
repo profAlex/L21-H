@@ -1,5 +1,4 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
@@ -17,7 +16,6 @@ export class UpdateCommentById extends Command<void> {
 @CommandHandler(UpdateCommentById)
 export class UpdateCommentByIdHandler implements ICommandHandler<UpdateCommentById> {
     constructor(
-        private usersExternalQueryRepository: UsersExternalQueryRepository,
         private commentsCommandRepository: CommentsCommandRepository,
     ) {}
 

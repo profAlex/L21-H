@@ -1,6 +1,5 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateCommentApiInputDto } from '../../api/input-dto/create-comment.api.input-dto';
-import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';
 import { UserAccessTokenContextDto } from '../../../../authorisation/guards/dto/user-access-token-context.dto';
@@ -24,7 +23,6 @@ export class CreateNewComment extends Command<SQLCommentViewDto> {
 @CommandHandler(CreateNewComment)
 export class CreateNewCommentHandler implements ICommandHandler<CreateNewComment> {
     constructor(
-        private usersExternalQueryRepository: UsersExternalQueryRepository,
         private postsQueryRepository: PostsQueryRepository,
         private commentsCommandRepository: CommentsCommandRepository,
         private commentsQueryRepository: CommentsQueryRepository,

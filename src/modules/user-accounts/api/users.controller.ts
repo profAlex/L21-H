@@ -11,13 +11,10 @@ import {
     Query,
     UseGuards,
 } from '@nestjs/common';
-import { UsersQueryRepository } from '../infrastructure/query/users.query-repository';
-import { SQLUserViewDto, UserViewDto } from './view-dto/users.view-dto';
-import { UsersService } from '../application/users.service';
+import { SQLUserViewDto } from './view-dto/users.view-dto';
 import { CreateUserInputDto } from './input-dto/users.input-dto';
 import { PaginatedViewDto } from '../../../core/dto/base.paginated.view-dto';
 import { ApiParam, ApiTags } from '@nestjs/swagger';
-import { UpdateUserInputDto } from './input-dto/update-user.input-dto';
 import { GetUsersQueryParams } from './input-dto/get-users-query-params.input-dto';
 import { BasicAuthGuard } from '../../authorisation/guards/basic/basic.auth-guard';
 import { IdParamInputDto } from './input-dto/id-param.input-dto';
@@ -31,8 +28,6 @@ import { DeleteUserCommand } from '../application/usecases/delete-user.usecase';
 @Controller('/sa/users')
 export class UsersController {
     constructor(
-        private usersQueryRepository: UsersQueryRepository,
-        private usersService: UsersService,
         private readonly commandBus: CommandBus,
         private readonly queryBus: QueryBus,
     ) {
@@ -46,7 +41,7 @@ export class UsersController {
     @Get()
     async getAllUsers(
         @Query() query: GetUsersQueryParams,
-    ): Promise<PaginatedViewDto<UserViewDto>> {
+    ): Promise<PaginatedViewDto<SQLUserViewDto>> {
         const result = await this.queryBus.execute<GetAllUsers>(
             new GetAllUsers(query),
         );
@@ -58,7 +53,7 @@ export class UsersController {
     @HttpCode(HttpStatus.CREATED)
     @UseGuards(BasicAuthGuard)
     @Post()
-    async createUser(@Body() body: CreateUserInputDto): Promise<UserViewDto> {
+    async createUser(@Body() body: CreateUserInputDto): Promise<SQLUserViewDto> {
         // const userId = await this.usersService.createUser(body);
 
         const userId = await this.commandBus.execute<string>(

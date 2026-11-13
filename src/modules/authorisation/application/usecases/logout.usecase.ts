@@ -2,7 +2,7 @@ import { Command, CommandHandler, ICommandHandler, IQueryHandler, Query, QueryHa
 import { PostsQueryRepository } from '../../../bloggers-platform/posts/infrastructure/query/posts.query-repository';
 import { GetAllPosts } from '../../../bloggers-platform/posts/application/usecases/get-all-posts.usecase';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { PostViewDto } from '../../../bloggers-platform/posts/api/view-dto/posts.view-dto';
+import { SQLPostViewDto } from '../../../bloggers-platform/posts/api/view-dto/posts.view-dto';
 import { SessionsQueryRepository } from '../../infrastructure/session/query/sessions.query-repository';
 import { SessionsCommandRepository } from '../../infrastructure/session/sessions.command-repository';
 import { NotFoundException, UnauthorizedException } from '@nestjs/common';

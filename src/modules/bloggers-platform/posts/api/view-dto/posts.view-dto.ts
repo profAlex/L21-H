@@ -28,7 +28,7 @@ import { LikeStatus } from '../../../../../core/enums/like-status.enum';
 import { Types } from 'mongoose';
 import { likeInfoQueryRawDto, PostQueryRawDto } from '../../infrastructure/query/posts.query-repository';
 
-// export class PostViewDto {
+// export class SQLPostViewDto {
 //     id: string;
 //     title: string;
 //     shortDescription: string;
@@ -50,8 +50,8 @@ import { likeInfoQueryRawDto, PostQueryRawDto } from '../../infrastructure/query
 //     //TODO: сделать FlattenMaps и для блога, проверить что там это есть
 //     // FlattenMaps дает совместимость с .lean(), т.к. внутри lean-документа уже нет никаких
 //     // специальных методов и типов, присущих hydrated-документу mongoose
-//     static mapToView(post: FlattenMaps<Post> & { _id: Types.ObjectId }): PostViewDto {
-//         const newPost = new PostViewDto();
+//     static mapToView(post: FlattenMaps<Post> & { _id: Types.ObjectId }): SQLPostViewDto {
+//         const newPost = new SQLPostViewDto();
 //
 //         newPost.id = post._id.toString();
 //         newPost.title = post.title;
@@ -63,7 +63,7 @@ import { likeInfoQueryRawDto, PostQueryRawDto } from '../../infrastructure/query
 //         // {...} или ручное перечисление, чтобы создать новый объект и не зависеть от оригинального объекта из Mongoose.
 //         // простые поля скопированные напрямую не передают ссылки на исходный обьект,
 //         // а сложные структуры (объекты и массивы) пересобираем заново.
-//         // Это гарантирует, что PostViewDto — это абсолютно независимый снимок данных,
+//         // Это гарантирует, что SQLPostViewDto — это абсолютно независимый снимок данных,
 //         // который можно безопасно отправлять фронту
 //         newPost.extendedLikesInfo = {
 //             likesCount: post.extendedLikesInfo.likesCount,
@@ -81,7 +81,7 @@ import { likeInfoQueryRawDto, PostQueryRawDto } from '../../infrastructure/query
 //     }
 // }
 
-export class PostViewDto {
+export class SQLPostViewDto {
     id: string;
     title: string;
     shortDescription: string;
@@ -111,31 +111,13 @@ export class PostViewDto {
         this.blogId = post.blogId;
         this.blogName = post.blogName;
 
-        this.createdAt =
-            post.createdAt instanceof Date
-                ? post.createdAt.toISOString()
-                : new Date(post.createdAt).toISOString(); // Мы принудительно оборачиваем в new Date(), чтобы метод точно существовал, т.к. внутрь сюда будут передавать ппосле lean
-        // {...} или ручное перечисление, чтобы создать новый объект и не зависеть от оригинального объекта из Mongoose.
-        // простые поля скопированные напрямую не передают ссылки на исходный обьект,
-        // а сложные структуры (объекты и массивы) пересобираем заново.
-        // Это гарантирует, что PostViewDto — это абсолютно независимый снимок данных,
-        // который можно безопасно отправлять фронту
+        this.createdAt  =new Date(post.createdAt).toISOString();
         this.extendedLikesInfo = {
             likesCount: post.likesCount,
             dislikesCount: post.dislikesCount,
             myStatus: myStatus,
 
-            // Безопасно маппим массив, если он есть, создавая новые независимые объекты
-            newestLikes: Array.isArray(post.newestLikes)
-                ? post.extendedLikesInfo.newestLikes.map((like: any) => ({
-                      addedAt:
-                          like.addedAt instanceof Date
-                              ? like.addedAt.toISOString()
-                              : like.addedAt,
-                      userId: like.userId,
-                      login: like.login,
-                  }))
-                : [],
+            newestLikes: [],
         };
     }
 
@@ -143,14 +125,14 @@ export class PostViewDto {
     static mapToView(
         post: PostQueryRawDto,
         myStatus: LikeStatus = LikeStatus.None,
-    ): PostViewDto {
-        return new PostViewDto(post, myStatus);
+    ): SQLPostViewDto {
+        return new SQLPostViewDto(post, myStatus);
     }
 
     static mapToViewFromFlatSQL(
         post: PostQueryRawDto,
         likesInfoArray: likeInfoQueryRawDto[],
-    ): PostViewDto {
+    ): SQLPostViewDto {
             // Находим лайки только для текущего поста
             const newestLikes = likesInfoArray
                 .filter((like) => like.postId === post.id)

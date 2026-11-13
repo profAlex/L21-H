@@ -1,11 +1,11 @@
-import { PostViewDto } from '../../api/view-dto/posts.view-dto';
+import { SQLPostViewDto } from '../../api/view-dto/posts.view-dto';
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { PostsQueryRepository } from '../../infrastructure/query/posts.query-repository';
 import { PostLikesQueryRepository } from '../../../likes/infrastructure/query/post-likes.query-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
-export class GetPostById extends Query<PostViewDto> {
+export class GetPostById extends Query<SQLPostViewDto> {
     constructor(
         public readonly postId: string,
         public readonly userId: string | undefined,
@@ -22,7 +22,7 @@ export class GetPostByIdHandler implements IQueryHandler<GetPostById> {
     ) {}
 
     // тут обрабатываем два сценария - аноноимный (user = undefined) и неанонимный запрос
-    async execute({ postId, userId }: GetPostById): Promise<PostViewDto> {
+    async execute({ postId, userId }: GetPostById): Promise<SQLPostViewDto> {
         const postView = await this.postsQueryRepository.SQLgetPostById({
             postId,
             userId,

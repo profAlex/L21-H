@@ -1,5 +1,4 @@
 import { Command, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersExternalQueryRepository } from '../../../../user-accounts/infrastructure/external-query/users.external-query-repository';
 import { InjectModel } from '@nestjs/mongoose';
 import { CommentsCommandRepository } from '../../infrastructure/comments.command-repository';
 import { CreateNewComment } from './create-new-comment.usecase';
@@ -18,7 +17,6 @@ export class DeleteCommentById extends Command<void> {
 @CommandHandler(DeleteCommentById)
 export class DeleteCommentByIdHandler implements ICommandHandler<DeleteCommentById> {
     constructor(
-        private usersExternalQueryRepository: UsersExternalQueryRepository,
         private commentsCommandRepository: CommentsCommandRepository,
     ) {}
 

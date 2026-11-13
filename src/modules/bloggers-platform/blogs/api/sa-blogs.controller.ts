@@ -21,7 +21,7 @@ import { BasicAuthGuard } from '../../../authorisation/guards/basic/basic.auth-g
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { ExtractUserIfExistsFromRequest } from '../../../authorisation/decorators/extract-user-if-exists.decorator';
 import { UserAccessTokenContextDto } from '../../../authorisation/guards/dto/user-access-token-context.dto';
-import { PostViewDto } from '../../posts/api/view-dto/posts.view-dto';
+import { SQLPostViewDto } from '../../posts/api/view-dto/posts.view-dto';
 import { GetPostsByBlogIdQuery } from '../application/usecases/get-posts-by-blog-id.usecase';
 import { CreateBlogInputDto } from './input-dto/blogs.input-dto';
 import { GetBlogByIdQuery } from '../application/usecases/get-blog-by-id.usecase';
@@ -116,14 +116,14 @@ export class SaBlogsController {
     async createPostByBlogId(
         @Param('blogId') blogId: string,
         @Body() body: CreateBlogPostInputDto,
-    ): Promise<PostViewDto> {
+    ): Promise<SQLPostViewDto> {
         // создаем пост получаем его ID
         const postId = await this.commandBus.execute<string>(
             new CreatePostForBlogCommand(blogId, body),
         );
 
-        // вызываем query-хэндлер для получения готового PostViewDto
-        return this.queryBus.execute<PostViewDto>(
+        // вызываем query-хэндлер для получения готового SQLPostViewDto
+        return this.queryBus.execute<SQLPostViewDto>(
             new GetPostById(postId, undefined),
         );
     }
@@ -137,8 +137,8 @@ export class SaBlogsController {
         @Param('blogId') blogId: string,
         @Query() query: GetPostsQueryParams,
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<PaginatedViewDto<PostViewDto>> {
-        return this.queryBus.execute<PaginatedViewDto<PostViewDto>>(
+    ): Promise<PaginatedViewDto<SQLPostViewDto>> {
+        return this.queryBus.execute<PaginatedViewDto<SQLPostViewDto>>(
             new GetPostsByBlogIdQuery(blogId, query, user?.userId),
         );
     }

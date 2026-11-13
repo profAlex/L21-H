@@ -11,6 +11,7 @@ import { DomainExceptionCode } from '../../../../../core/exceptions/domain-excep
 import { PostLikesQueryRepository } from '../../../likes/infrastructure/query/post-likes.query-repository';
 import { LikeStatus } from '../../../../../core/enums/like-status.enum';
 import { DataSource } from 'typeorm';
+import { SQLPostViewDto } from '../../api/view-dto/posts.view-dto';
 
 export interface PostQueryRawDto {
     id: string;
@@ -64,7 +65,7 @@ export class PostsQueryRepository {
         userId?: string | null;
         blogId: string;
         query: GetPostsQueryParams;
-    }): Promise<PaginatedViewDto<PostViewDto>> {
+    }): Promise<PaginatedViewDto<SQLPostViewDto>> {
         const { sortBy, sortDirection, pageNumber, pageSize } = query;
 
         const sortingMap: Record<string, string> = {
@@ -154,7 +155,7 @@ export class PostsQueryRepository {
 
         // сразу возвращаем пустой результат и не делаем 2-й запрос если постов нет
         if (!postRows.length) {
-            return PaginatedViewDto.mapToView<PostViewDto>({
+            return PaginatedViewDto.mapToView<SQLPostViewDto>({
                 items: [],
                 page: pageNumber,
                 size: pageSize,
@@ -186,9 +187,9 @@ export class PostsQueryRepository {
             [postIdArray],
         );
 
-        return PaginatedViewDto.mapToView<PostViewDto>({
+        return PaginatedViewDto.mapToView<SQLPostViewDto>({
             items: postRows.map((post) =>
-                PostViewDto.mapToViewFromFlatSQL(post, likeInfoRows),
+                SQLPostViewDto.mapToViewFromFlatSQL(post, likeInfoRows),
             ),
             page: pageNumber,
             size: pageSize,
@@ -209,56 +210,7 @@ export class PostsQueryRepository {
     // 3) далее сформированный массив переделываем в словарь map в котором каждому
     // postId соответствует likeStatus
     // 4) методами mapToView последовательно маппим результат
-    async getAllPosts({
-        sentUserId,
-        query,
-    }: {
-        sentUserId?: string | undefined;
-        query: GetPostsQueryParams;
-    }): Promise<PaginatedViewDto<PostViewDto>> {
-        const { sortBy, sortDirection, pageNumber, pageSize } = query;
-        const skip = query.calculateSkip();
-        const filter = {
-            deletedAt: null,
-        };
-        const [postsList, totalCount] = await Promise.all([
-            this.PostModel.find(filter)
-                .sort({
-                    [sortBy]: sortDirection === SortDirection.Asc ? 1 : -1,
-                })
-                .skip(skip)
-                .limit(pageSize)
-                .lean(),
-            this.PostModel.countDocuments(filter),
-        ]);
 
-        const likesMap = new Map<string, LikeStatus>(); // Ключ: postId, Значение: likeStatus
-
-        if (sentUserId && postsList.length > 0) {
-            const postIdsList = postsList.map((post) => post._id.toString());
-
-            const userReactions =
-                await this.postLikesQueryRepository.getReactionListForPosts(
-                    postIdsList,
-                    sentUserId,
-                );
-
-            userReactions.forEach((reaction) => {
-                likesMap.set(reaction.postId.toString(), reaction.likeStatus);
-            });
-        }
-
-        return PaginatedViewDto.mapToView<PostViewDto>({
-            items: postsList.map((item) => {
-                const postIdStr = item._id.toString();
-                const myStatus = likesMap.get(postIdStr) || LikeStatus.None;
-                return PostViewDto.mapToView(item, myStatus);
-            }),
-            page: pageNumber,
-            size: pageSize,
-            totalCount: totalCount,
-        });
-    }
 
     async SQLgetAllPosts({
         sentUserId,
@@ -266,7 +218,7 @@ export class PostsQueryRepository {
     }: {
         sentUserId?: string | undefined;
         query: GetPostsQueryParams;
-    }): Promise<PaginatedViewDto<PostViewDto>> {
+    }): Promise<PaginatedViewDto<SQLPostViewDto>> {
         const { sortBy, sortDirection, pageNumber, pageSize } = query;
 
         const sortingMap: Record<string, string> = {
@@ -324,7 +276,7 @@ export class PostsQueryRepository {
 
         // сразу возвращаем пустой результат и не делаем 2-й запрос если постов нет
         if (!postRows.length) {
-            return PaginatedViewDto.mapToView<PostViewDto>({
+            return PaginatedViewDto.mapToView<SQLPostViewDto>({
                 items: [],
                 page: pageNumber,
                 size: pageSize,
@@ -356,30 +308,14 @@ export class PostsQueryRepository {
             [postIdArray],
         );
 
-        return PaginatedViewDto.mapToView<PostViewDto>({
+        return PaginatedViewDto.mapToView<SQLPostViewDto>({
             items: postRows.map((post) =>
-                PostViewDto.mapToViewFromFlatSQL(post, likeInfoRows),
+                SQLPostViewDto.mapToViewFromFlatSQL(post, likeInfoRows),
             ),
             page: pageNumber,
             size: pageSize,
             totalCount: totalCount,
         });
-    }
-
-    async getPostByIdOrNotFoundFail(sentPostId: string): Promise<PostViewDto> {
-        const post = await this.PostModel.findOne({
-            deletedAt: null,
-            _id: sentPostId,
-        });
-        if (!post) {
-            // throw new NotFoundException("Post not found");
-            throw new DomainException({
-                code: DomainExceptionCode.PostNotFound,
-                message: `Post not found`,
-            });
-        }
-
-        return PostViewDto.mapToView(post);
     }
 
     async SQLgetPostById({
@@ -388,7 +324,7 @@ export class PostsQueryRepository {
     }: {
         postId: string;
         userId: string | undefined;
-    }): Promise<PostViewDto | null> {
+    }): Promise<SQLPostViewDto | null> {
 
         /*
         {
@@ -453,6 +389,6 @@ export class PostsQueryRepository {
 
         const likeInfoRow = await this.dataSource.query<likeInfoQueryRawDto[]>(likesInfoQuery, [postId]);
 
-        return PostViewDto.mapToViewFromFlatSQL(postRow, likeInfoRow);
+        return SQLPostViewDto.mapToViewFromFlatSQL(postRow, likeInfoRow);
     }
 }

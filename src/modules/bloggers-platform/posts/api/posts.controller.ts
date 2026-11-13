@@ -15,19 +15,12 @@ import {
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { SQLCommentViewDto } from '../../comments/api/view-dto/comments.view-dto';
 import { GetCommentsQueryParams } from '../../comments/api/input-dto/get-comments-query-params.input-dto';
-import { CommentsService } from '../../comments/application/comments.service';
 import { GetPostsQueryParams } from './input-dto/get-posts-query-params.input-dto';
-import { PostViewDto } from './view-dto/posts.view-dto';
-import { PostsQueryRepository } from '../infrastructure/query/posts.query-repository';
-import { CreatePostApiInputDto } from './input-dto/create-post.api.input-dto';
-import { UpdatePostInputDto } from '../dto/create-post-input.dto';
+import { SQLPostViewDto } from './view-dto/posts.view-dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetCommentsForSpecificPostId } from '../../comments/application/usecases/get-comments-for-specified-post-id.usecase';
 import { GetAllPosts } from '../application/usecases/get-all-posts.usecase';
 import { GetPostById } from '../application/usecases/get-post-by-id.usecase';
-import { UpdatePostById } from '../application/usecases/update-post-by-id.usecase';
-import { DeletePostById } from '../application/usecases/delete-post-by-id.usecase';
-import { BasicAuthGuard } from '../../../authorisation/guards/basic/basic.auth-guard';
 import { CreateCommentApiInputDto } from '../../comments/api/input-dto/create-comment.api.input-dto';
 import {
     JwtAuthGuard,
@@ -115,8 +108,8 @@ export class PostsController {
     async getAllPosts(
         @Query() query: GetPostsQueryParams,
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<PaginatedViewDto<PostViewDto>> {
-        return this.queryBus.execute<PaginatedViewDto<PostViewDto>>(
+    ): Promise<PaginatedViewDto<SQLPostViewDto>> {
+        return this.queryBus.execute<PaginatedViewDto<SQLPostViewDto>>(
             new GetAllPosts(query, user?.userId),
         );
     }
@@ -131,8 +124,8 @@ export class PostsController {
     async getPostById(
         @Param('id') postId: string,
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<PostViewDto> {
-        return this.queryBus.execute<PostViewDto>(
+    ): Promise<SQLPostViewDto> {
+        return this.queryBus.execute<SQLPostViewDto>(
             new GetPostById(postId, user?.userId),
         );
     }
@@ -161,7 +154,7 @@ export class PostsController {
     // @Post()
     // async createPost(
     //     @Body() body: CreatePostApiInputDto,
-    // ): Promise<PostViewDto> {
+    // ): Promise<SQLPostViewDto> {
     //     return this.commandBus.execute<CreatePost>(new CreatePost(body));
     // }
     //

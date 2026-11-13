@@ -6,8 +6,8 @@
 // import { BlogsQueryRepository } from '../../../blogs/infrastructure/query/blogs.query-repository';
 // import { InjectModel } from '@nestjs/mongoose';
 //
-// // <PostViewDto> - This type represents the command execution result
-// export class CreatePost extends Command<PostViewDto> {
+// // <SQLPostViewDto> - This type represents the command execution result
+// export class CreatePost extends Command<SQLPostViewDto> {
 //     constructor(public readonly body: CreatePostApiInputDto) {
 //         super();
 //     }
@@ -20,7 +20,7 @@
 //         private readonly postsCommandRepository: PostsCommandRepository,
 //     ) {}
 //
-//     async execute({ body }: CreatePost): Promise<PostViewDto> {
+//     async execute({ body }: CreatePost): Promise<SQLPostViewDto> {
 //         const blog = await this.blogsQueryRepository.getBlogName(body.blogId);
 //         if (!blog) {
 //             // throw new NotFoundException("Blog not found");
@@ -38,6 +38,6 @@
 //
 //         await this.postsCommandRepository.save(post);
 //
-//         return PostViewDto.mapToView(post);
+//         return SQLPostViewDto.mapToView(post);
 //     }
 // }

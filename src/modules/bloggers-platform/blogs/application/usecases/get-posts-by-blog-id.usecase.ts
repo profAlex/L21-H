@@ -1,13 +1,13 @@
 import { GetPostsQueryParams } from '../../../posts/api/input-dto/get-posts-query-params.input-dto';
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
-import { PostViewDto } from '../../../posts/api/view-dto/posts.view-dto';
+import { SQLPostViewDto } from '../../../posts/api/view-dto/posts.view-dto';
 import { BlogsQueryRepository } from '../../infrastructure/query/blogs.query-repository';
 import { PostsQueryRepository } from '../../../posts/infrastructure/query/posts.query-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
-export class GetPostsByBlogIdQuery extends Query<PaginatedViewDto<PostViewDto>> {
+export class GetPostsByBlogIdQuery extends Query<PaginatedViewDto<SQLPostViewDto>> {
     constructor(
         public readonly blogId: string,
         public readonly queryParams: GetPostsQueryParams,
@@ -28,7 +28,7 @@ export class GetPostsByBlogIdQueryHandler
 
     async execute(
         query: GetPostsByBlogIdQuery,
-    ): Promise<PaginatedViewDto<PostViewDto>> {
+    ): Promise<PaginatedViewDto<SQLPostViewDto>> {
         const { blogId, queryParams, userId } = query;
 
         const blogExists = await this.blogsQueryRepository.SQLifBlogExists(blogId);
