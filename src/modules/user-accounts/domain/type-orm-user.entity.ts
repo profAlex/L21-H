@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseDBEntity } from '../../../core/postgres_db_entities/baseDBEntity';
 import { UserSession } from '../../authorisation/domain/type-orm-session.entity';
+import { SQLUser } from './sql-user.entitry';
 
 
 @Entity('users')
@@ -37,4 +38,31 @@ export class User extends BaseDBEntity {
 
     @OneToMany(() => UserSession, (session) => session.user)
     sessions: UserSession[];
+
+    // Статический метод для перекладывания данных из доменной модели в TypeORM-сущность
+    static fromDomain(domainUser: SQLUser): User {
+        const userEntity = new User();
+
+        userEntity.id = domainUser.id;
+        userEntity.login = domainUser.login;
+        userEntity.email = domainUser.email;
+        userEntity.password_hash = domainUser.passwordHash;
+        userEntity.is_email_confirmed = domainUser.isEmailConfirmed;
+
+        // Мапим вложенные объекты домена в плоские колонки базы данных
+        userEntity.email_confirmation_code = domainUser.emailConfirmationInfo.confirmationCode;
+        userEntity.email_confirmation_expiration_date = domainUser.emailConfirmationInfo.expirationDate;
+
+        userEntity.first_name = domainUser.name.firstName;
+        userEntity.last_name = domainUser.name.lastName;
+
+        userEntity.created_at = domainUser.createdAt;
+        userEntity.updated_at = domainUser.updatedAt;
+        userEntity.deleted_at = domainUser.deletedAt;
+
+        userEntity.recovery_code = domainUser.recoveryCode;
+        userEntity.recovery_code_expiration_date = domainUser.recoveryCodeExpirationDate;
+
+        return userEntity;
+    }
 }

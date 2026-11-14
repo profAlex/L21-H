@@ -2,8 +2,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { SQLUser } from '../domain/sql-user.entitry';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../domain/type-orm-user.entity';
 
 
 export interface UserDbRow {
@@ -19,6 +21,8 @@ export class UsersCommandRepository {
     //инжектирование модели через DI
     constructor(
         private readonly dataSource: DataSource,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
     ) {}
 
     // async findById(id: string): Promise<UserDocument | null> {
@@ -37,54 +41,63 @@ export class UsersCommandRepository {
 
 
     /* language=PostgreSQL */
-    async SQLsave(user: SQLUser): Promise<void> {
-        const query = `
-            INSERT INTO users (id,
-                               login,
-                               email,
-                               password_hash,
-                               is_email_confirmed,
-                               email_confirmation_code,
-                               email_confirmation_expiration_date,
-                               first_name,
-                               last_name,
-                               created_at,
-                               updated_at,
-                               deleted_at,
-                               recovery_code,
-                               recovery_code_expiration_date)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) 
-            ON CONFLICT (id) DO
-            UPDATE SET
-                is_email_confirmed = EXCLUDED.is_email_confirmed,
-                email_confirmation_code = EXCLUDED.email_confirmation_code,
-                email_confirmation_expiration_date = EXCLUDED.email_confirmation_expiration_date,
-                updated_at = EXCLUDED.updated_at,
-                deleted_at = EXCLUDED.deleted_at
-        `;
+    // async SQLsave(user: SQLUser): Promise<void> {
+    //     const query = `
+    //         INSERT INTO users (id,
+    //                            login,
+    //                            email,
+    //                            password_hash,
+    //                            is_email_confirmed,
+    //                            email_confirmation_code,
+    //                            email_confirmation_expiration_date,
+    //                            first_name,
+    //                            last_name,
+    //                            created_at,
+    //                            updated_at,
+    //                            deleted_at,
+    //                            recovery_code,
+    //                            recovery_code_expiration_date)
+    //         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+    //         ON CONFLICT (id) DO
+    //         UPDATE SET
+    //             is_email_confirmed = EXCLUDED.is_email_confirmed,
+    //             email_confirmation_code = EXCLUDED.email_confirmation_code,
+    //             email_confirmation_expiration_date = EXCLUDED.email_confirmation_expiration_date,
+    //             updated_at = EXCLUDED.updated_at,
+    //             deleted_at = EXCLUDED.deleted_at
+    //     `;
+    //
+    //     const queryParams = [
+    //         user.id,
+    //         user.login,
+    //         user.email,
+    //         user.passwordHash,
+    //         user.isEmailConfirmed,
+    //         user.emailConfirmationInfo.confirmationCode,
+    //         user.emailConfirmationInfo.expirationDate,
+    //         user.name.firstName,
+    //         user.name.lastName,
+    //         user.createdAt,
+    //         user.updatedAt,
+    //         user.deletedAt,
+    //         user.recoveryCode,
+    //         user.recoveryCodeExpirationDate,
+    //     ];
+    //
+    //     // console.log("query formed successfully");
+    //
+    //     await this.dataSource.query(query, queryParams);
+    // }
 
-        const queryParams = [
-            user.id,
-            user.login,
-            user.email,
-            user.passwordHash,
-            user.isEmailConfirmed,
-            user.emailConfirmationInfo.confirmationCode,
-            user.emailConfirmationInfo.expirationDate,
-            user.name.firstName,
-            user.name.lastName,
-            user.createdAt,
-            user.updatedAt,
-            user.deletedAt,
-            user.recoveryCode,
-            user.recoveryCodeExpirationDate,
-        ];
+    // переписали под TypeOrm подход
+    async SQLsave(userDomain: SQLUser): Promise<void> {
+        // 1. Превращаем доменную модель в TypeORM сущность (Db-модель)
+        const userEntity = User.fromDomain(userDomain);
 
-        // console.log("query formed successfully");
-
-        await this.dataSource.query(query, queryParams);
+        // 2. Сохраняем через встроенный репозиторий TypeORM
+        // save работает по принципу upsert: если id уже есть, обновит; если нет — создаст.
+        await this.userRepository.save(userEntity);
     }
-
 
     async SQLfindUserById(id: string): Promise<SQLUser | null> {
         const [userRow] = await this.dataSource.query<UserDbRow[]>(
