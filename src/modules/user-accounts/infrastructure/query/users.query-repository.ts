@@ -24,21 +24,46 @@ export class UsersQueryRepository {
         private readonly userRepository: Repository<User>
     ) {}
 
+    // async SQLgetByIdOrNotFoundFail(id: string): Promise<SQLUserViewDto> {
+    //     const [user] = await this.dataSource.query<UserDbRow[]>(`
+    //         SELECT id, login, email, created_at
+    //         FROM users
+    //         WHERE id = $1 AND deleted_at IS NULL`,[id]);
+    //
+    //     if (!user) {
+    //         // throw new NotFoundException('user not found');
+    //         throw new DomainException({
+    //             code: DomainExceptionCode.UserNotFound,
+    //             message: 'User not found',
+    //         });
+    //     }
+    //
+    //     return SQLUserViewDto.mapFromDbRow(user);
+    // }
     async SQLgetByIdOrNotFoundFail(id: string): Promise<SQLUserViewDto> {
-        const [user] = await this.dataSource.query<UserDbRow[]>(`
-            SELECT id, login, email, created_at
-            FROM users
-            WHERE id = $1 AND deleted_at IS NULL`,[id]);
+        // Ищем пользователя через QueryBuilder, выбирая только нужные поля
+        const user = await this.userRepository
+            .createQueryBuilder('user')
+            .select(['user.id', 'user.login', 'user.email', 'user.created_at'])
+            .where('user.id = :id', { id })
+            .andWhere('user.deleted_at IS NULL')
+            .getOne();
 
         if (!user) {
-            // throw new NotFoundException('user not found');
             throw new DomainException({
                 code: DomainExceptionCode.UserNotFound,
                 message: 'User not found',
             });
         }
 
-        return SQLUserViewDto.mapFromDbRow(user);
+        // Превращаем найденную TypeORM сущность в DTO для ответа клиенту
+        // Если у вашего SQLUserViewDto уже есть метод mapFromEntity или вы маппите через mapFromDbRow:
+        return SQLUserViewDto.mapFromDbRow({
+            id: user.id,
+            login: user.login,
+            email: user.email,
+            created_at: user.created_at,
+        });
     }
 
     // async getMeByIdOrNotFoundFail(id: string): Promise<MeViewDto> {
