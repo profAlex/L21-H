@@ -21,7 +21,7 @@ export class UsersQueryRepository {
     constructor(
         private readonly dataSource: DataSource,
         @InjectRepository(User)
-        private readonly userRepository: Repository<User>
+        private readonly userRepository: Repository<User>,
     ) {}
 
     // async SQLgetByIdOrNotFoundFail(id: string): Promise<SQLUserViewDto> {
@@ -88,11 +88,17 @@ export class UsersQueryRepository {
         const meQuery = `
             SELECT id AS "userId", login, email
             FROM public."users"
-            WHERE id = $1 AND deleted_at IS NULL;
+            WHERE id = $1
+              AND deleted_at IS NULL;
         `;
 
-        const [userRow] = await this.dataSource.query<{userId:string, login:string, email:string}[]>(meQuery, [id]);
-
+        const [userRow] = await this.dataSource.query<
+            {
+                userId: string;
+                login: string;
+                email: string;
+            }[]
+        >(meQuery, [id]);
 
         if (!userRow) {
             // throw new NotFoundException('user not found');
@@ -174,10 +180,14 @@ export class UsersQueryRepository {
             queryBuilder.andWhere(
                 new Brackets((qb) => {
                     if (query.searchLoginTerm) {
-                        qb.orWhere('user.login ILIKE :login', { login: `%${query.searchLoginTerm}%` });
+                        qb.orWhere('user.login ILIKE :login', {
+                            login: `%${query.searchLoginTerm}%`,
+                        });
                     }
                     if (query.searchEmailTerm) {
-                        qb.orWhere('user.email ILIKE :email', { email: `%${query.searchEmailTerm}%` });
+                        qb.orWhere('user.email ILIKE :email', {
+                            email: `%${query.searchEmailTerm}%`,
+                        });
                     }
                 }),
             );
@@ -190,8 +200,13 @@ export class UsersQueryRepository {
             email: 'user.email',
         };
 
-        const sortByColumn = allowedSortColumns[query.sortBy] || 'user.created_at';
-        const sortDirection = (query.sortDirection && query.sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC') as 'ASC' | 'DESC';
+        const sortByColumn =
+            allowedSortColumns[query.sortBy] || 'user.created_at';
+        const sortDirection = (
+            query.sortDirection && query.sortDirection.toUpperCase() === 'ASC'
+                ? 'ASC'
+                : 'DESC'
+        ) as 'ASC' | 'DESC';
 
         queryBuilder.orderBy(sortByColumn, sortDirection);
 
@@ -200,7 +215,12 @@ export class UsersQueryRepository {
         queryBuilder.skip(skip).take(query.pageSize);
 
         // Выбираем нужные поля (чтобы не тянуть лишнее)
-        queryBuilder.select(['user.id', 'user.login', 'user.email', 'user.created_at']);
+        queryBuilder.select([
+            'user.id',
+            'user.login',
+            'user.email',
+            'user.created_at',
+        ]);
 
         // Параллельно получаем элементы и общее количество
         const [usersRows, totalCount] = await queryBuilder.getManyAndCount();
@@ -212,7 +232,7 @@ export class UsersQueryRepository {
                 login: row.login,
                 email: row.email,
                 created_at: row.created_at,
-            })
+            }),
         );
 
         return PaginatedViewDto.mapToView({
@@ -230,7 +250,28 @@ export class UsersQueryRepository {
         //         ? row.created_at.toISOString()
         //         : new Date(row.created_at).toISOString(),
         // }));
+    }
 
+    async getALlUsersTest(
+        query: GetUsersQueryParams,
+    ): Promise<PaginatedViewDto<SQLUserViewDto>> {
+        const queryBuilder = this.userRepository.createQueryBuilder('u'); // здесь 'u' - это просто алиас для названия таблицы, которое у нас в базе именуется как 'users'. Необходимо для обращения к сущностям кортежа в синтаксисе TypeORM.
+
+        queryBuilder.where('u.deleted_at IS NULL');
+        if (query.searchLoginTerm || query.searchEmailTerm) {
+            queryBuilder.andWhere(
+                new Brackets((qb) => {
+                    if(query.searchLoginTerm) {
+                        queryBuilder.orWhere('u.login ILIKE :loginTestName1', {loginTestName1: `%${query.searchLoginTerm}%`});
+                    }
+                    if (query.searchEmailTerm) {
+                        queryBuilder.orWhere('u.email ILIKE :emailTestName1', {emailTestName1: `%${query.searchEmailTerm}%`});
+                    }
+                })
+            )
+        }
+
+        
     }
 
     // async findUserByLogin(
@@ -255,16 +296,18 @@ export class UsersQueryRepository {
     /* language = SQL */
     async SQLfindUserByLogin(
         loginOrEmail: string,
-    ): Promise<{id:string, passwordHash:string} | null> {
+    ): Promise<{ id: string; passwordHash: string } | null> {
         const query = `
-            SELECT 
-                id AS "id", 
-                password_hash AS "passwordHash" 
+            SELECT id AS            "id",
+                   password_hash AS "passwordHash"
             FROM users
-            WHERE (login = $1 OR email = $1) AND deleted_at IS NULL; 
+            WHERE (login = $1 OR email = $1)
+              AND deleted_at IS NULL;
         `;
 
-        const [usersRow] = await this.dataSource.query<{id:string, passwordHash:string}[]>(query,[loginOrEmail]);
+        const [usersRow] = await this.dataSource.query<
+            { id: string; passwordHash: string }[]
+        >(query, [loginOrEmail]);
 
         if (!usersRow) {
             return null;
@@ -272,7 +315,6 @@ export class UsersQueryRepository {
 
         return usersRow;
     }
-
 
     // async checkIfUserExists(
     //     login: string,
@@ -355,5 +397,4 @@ export class UsersQueryRepository {
     //         ],
     //     });
     // }
-
 }
