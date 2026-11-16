@@ -24,29 +24,13 @@ export class UsersQueryRepository {
         private readonly userRepository: Repository<User>,
     ) {}
 
-    // async SQLgetByIdOrNotFoundFail(id: string): Promise<SQLUserViewDto> {
-    //     const [user] = await this.dataSource.query<UserDbRow[]>(`
-    //         SELECT id, login, email, created_at
-    //         FROM users
-    //         WHERE id = $1 AND deleted_at IS NULL`,[id]);
-    //
-    //     if (!user) {
-    //         // throw new NotFoundException('user not found');
-    //         throw new DomainException({
-    //             code: DomainExceptionCode.UserNotFound,
-    //             message: 'User not found',
-    //         });
-    //     }
-    //
-    //     return SQLUserViewDto.mapFromDbRow(user);
-    // }
     async SQLgetByIdOrNotFoundFail(id: string): Promise<SQLUserViewDto> {
         // Ищем пользователя через QueryBuilder, выбирая только нужные поля
         const user = await this.userRepository
-            .createQueryBuilder('user')
-            .select(['user.id', 'user.login', 'user.email', 'user.created_at'])
-            .where('user.id = :id', { id })
-            .andWhere('user.deleted_at IS NULL')
+            .createQueryBuilder('u')
+            .select(['u.id', 'u.login', 'u.email', 'u.created_at'])
+            .where('u.id = :id', { id })
+            .andWhere('u.deleted_at IS NULL')
             .getOne();
 
         if (!user) {
@@ -56,32 +40,18 @@ export class UsersQueryRepository {
             });
         }
 
-        // Превращаем найденную TypeORM сущность в DTO для ответа клиенту
-        // Если у вашего SQLUserViewDto уже есть метод mapFromEntity или вы маппите через mapFromDbRow:
-        return SQLUserViewDto.mapFromDbRow({
-            id: user.id,
-            login: user.login,
-            email: user.email,
-            created_at: user.created_at,
-        });
+        // превращаем найденную сущность в DTO для ответа клиенту
+        return SQLUserViewDto.mapFromDbRow(user);
+
+        // // более безопасная версия, на случай если поменяется способ маппинга и создания обхекта внутри SQLUserViewDto:
+        // return SQLUserViewDto.mapFromDbRow({
+        //     id: user.id,
+        //     login: user.login,
+        //     email: user.email,
+        //     created_at: user.created_at,
+        // });
     }
 
-    // async getMeByIdOrNotFoundFail(id: string): Promise<MeViewDto> {
-    //     const user = await this.UserModel.findOne({
-    //         _id: id,
-    //         deletedAt: null,
-    //     }).lean();
-    //
-    //     if (!user) {
-    //         // throw new NotFoundException('user not found');
-    //         throw new DomainException({
-    //             code: DomainExceptionCode.UserNotFound,
-    //             message: 'User not found',
-    //         });
-    //     }
-    //
-    //     return MeViewDto.mapToView(user);
-    // }
 
     async SQLgetMeByIdOrNotFoundFail(id: string): Promise<SQLMeViewDto> {
         // все алиасы без двойных кавычек принудительно приводятся к нижнему регистру (userid)!
@@ -166,42 +136,37 @@ export class UsersQueryRepository {
     //     });
     // }
 
+
     async getAllUsers(
         query: GetUsersQueryParams,
     ): Promise<PaginatedViewDto<SQLUserViewDto>> {
-        // создаем экземпляр билдера
-        const queryBuilder = this.userRepository.createQueryBuilder('user');
+        const queryBuilder = this.userRepository.createQueryBuilder('u'); // здесь 'u' - это просто алиас для названия таблицы, которое у нас в базе именуется как 'users'. Необходимо для обращения к сущностям кортежа в синтаксисе TypeORM.
 
-        // Исключаем мягко удаленные (если не используете WithDeleted глобально)
-        queryBuilder.where('user.deleted_at IS NULL');
-
-        // Условия поиска (OR по login или email, case-insensitive ILIKE)
+        queryBuilder.where('u.deleted_at IS NULL');
         if (query.searchLoginTerm || query.searchEmailTerm) {
             queryBuilder.andWhere(
                 new Brackets((qb) => {
                     if (query.searchLoginTerm) {
-                        qb.orWhere('user.login ILIKE :login', {
-                            login: `%${query.searchLoginTerm}%`,
+                        queryBuilder.orWhere('u.login ILIKE :loginTestName1', {
+                            loginTestName1: `%${query.searchLoginTerm}%`,
                         });
                     }
                     if (query.searchEmailTerm) {
-                        qb.orWhere('user.email ILIKE :email', {
-                            email: `%${query.searchEmailTerm}%`,
+                        queryBuilder.orWhere('u.email ILIKE :emailTestName1', {
+                            emailTestName1: `%${query.searchEmailTerm}%`,
                         });
                     }
                 }),
             );
         }
 
-        // Безопасная сортировка (whitelist полей)
-        const allowedSortColumns: Record<string, string> = {
-            createdAt: 'user.created_at',
-            login: 'user.login',
-            email: 'user.email',
+        const allowedSortingFields: Record<string, string> = {
+            createdAt: 'u.created_at',
+            login: 'u.login',
+            email: 'u.email',
         };
-
         const sortByColumn =
-            allowedSortColumns[query.sortBy] || 'user.created_at';
+            allowedSortingFields[query.sortBy] || 'u.created_at';
         const sortDirection = (
             query.sortDirection && query.sortDirection.toUpperCase() === 'ASC'
                 ? 'ASC'
@@ -210,35 +175,19 @@ export class UsersQueryRepository {
 
         queryBuilder.orderBy(sortByColumn, sortDirection);
 
-        // Пагинация
         const skip = query.calculateSkip();
         queryBuilder.skip(skip).take(query.pageSize);
 
-        // Выбираем нужные поля (чтобы не тянуть лишнее)
-        queryBuilder.select([
-            'user.id',
-            'user.login',
-            'user.email',
-            'user.created_at',
-        ]);
+        queryBuilder.select(['u.id', 'u.login', 'u.email', 'u.created_at']);
 
-        // Параллельно получаем элементы и общее количество
-        const [usersRows, totalCount] = await queryBuilder.getManyAndCount();
+        const [userRows, totalCount] = await queryBuilder.getManyAndCount();
 
-        // Маппим в DTO
-        const items = usersRows.map((row) =>
-            SQLUserViewDto.mapFromDbRow({
-                id: row.id,
-                login: row.login,
-                email: row.email,
-                created_at: row.created_at,
-            }),
-        );
+        const items = userRows.map((row) => SQLUserViewDto.mapFromDbRow(row));
 
         return PaginatedViewDto.mapToView({
-            items,
-            totalCount,
+            items: items,
             page: query.pageNumber,
+            totalCount: totalCount,
             size: query.pageSize,
         });
         // маппим плоские SQL-строки в DTO
@@ -250,28 +199,6 @@ export class UsersQueryRepository {
         //         ? row.created_at.toISOString()
         //         : new Date(row.created_at).toISOString(),
         // }));
-    }
-
-    async getALlUsersTest(
-        query: GetUsersQueryParams,
-    ): Promise<PaginatedViewDto<SQLUserViewDto>> {
-        const queryBuilder = this.userRepository.createQueryBuilder('u'); // здесь 'u' - это просто алиас для названия таблицы, которое у нас в базе именуется как 'users'. Необходимо для обращения к сущностям кортежа в синтаксисе TypeORM.
-
-        queryBuilder.where('u.deleted_at IS NULL');
-        if (query.searchLoginTerm || query.searchEmailTerm) {
-            queryBuilder.andWhere(
-                new Brackets((qb) => {
-                    if(query.searchLoginTerm) {
-                        queryBuilder.orWhere('u.login ILIKE :loginTestName1', {loginTestName1: `%${query.searchLoginTerm}%`});
-                    }
-                    if (query.searchEmailTerm) {
-                        queryBuilder.orWhere('u.email ILIKE :emailTestName1', {emailTestName1: `%${query.searchEmailTerm}%`});
-                    }
-                })
-            )
-        }
-
-        
     }
 
     // async findUserByLogin(

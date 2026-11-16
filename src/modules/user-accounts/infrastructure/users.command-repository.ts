@@ -91,33 +91,52 @@ export class UsersCommandRepository {
 
     // переписали под TypeOrm подход
     async SQLsave(userDomain: SQLUser): Promise<void> {
-        // 1. Превращаем доменную модель в TypeORM сущность (Db-модель)
+        // сначала простой класс юзера (доменная сущность) превращаем в TypeORM сущность (Db-модель)
         const userEntity = User.fromDomain(userDomain);
 
-        // 2. Сохраняем через встроенный репозиторий TypeORM
+        // сохраняем с помощью встроенного вспомогательного объекта TypeORM - Repository
         // save работает по принципу upsert: если id уже есть, обновит; если нет — создаст.
         await this.userRepository.save(userEntity);
     }
 
-    async SQLfindUserById(id: string): Promise<SQLUser | null> {
-        const [userRow] = await this.dataSource.query<UserDbRow[]>(
-            `
-                SELECT *
-                FROM users
-                WHERE id = $1
-                  AND deleted_at IS NULL
-            `,
-            [id],
-        );
+    // async SQLfindUserById(id: string): Promise<SQLUser | null> {
+    //     const [userRow] = await this.dataSource.query<UserDbRow[]>(
+    //         `
+    //             SELECT *
+    //             FROM users
+    //             WHERE id = $1
+    //               AND deleted_at IS NULL
+    //         `,
+    //         [id],
+    //     );
+    //
+    //     if (!userRow) {
+    //         return null;
+    //     }
+    //
+    //     // Воссоздаем доменный объект из строки БД
+    //     return SQLUser.reconstruct(userRow);
+    // }
 
-        if (!userRow) {
-            return null;
-        }
 
-        // Воссоздаем доменный объект из строки БД
-        return SQLUser.reconstruct(userRow);
+    async SQLfindUserById(id: string): Promise<boolean> {
+        const result = await this.userRepository.createQueryBuilder()
+            .update(User)
+            .set({deleted_at: new Date(), updated_at: new Date()})
+            .where('id = :id', {id})
+            .andWhere('deleted_at IS NULL')
+            .execute();
+
+        // // а можно вот так еще проще, т.к. поля помещены @DeleteDatColumn и @UpdateDateColumn
+        // const result = await this.userRepository
+        //     .createQueryBuilder()
+        //     .softDelete() // Сам проставит deleted_at и updated_at
+        //     .where('id = :id', { id })
+        //     .andWhere('deleted_at IS NULL')
+        //     .execute();
+
+        return (Boolean(result.affected && result.affected > 0))
     }
-
 
     async SQLfindConfirmedUserByEmail(email: string): Promise<SQLUser | null> {
         const query = `

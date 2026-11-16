@@ -67,6 +67,7 @@ export class UsersController {
         );
     }
 
+
     // Deletes user specified by id
     @UseGuards(BasicAuthGuard)
     @ApiParam({ name: 'id' }) //для сваггера

@@ -28,8 +28,5 @@ export class DeleteUserHandler implements ICommandHandler<DeleteUserCommand> {
             });
         }
 
-        user.makeDeleted();
-
-        await this.usersCommandRepository.SQLsave(user);
     }
 }
