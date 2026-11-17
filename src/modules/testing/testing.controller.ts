@@ -56,7 +56,7 @@ export class TestingController {
         //
         // if (availableTables.length === 0) {
         //     console.warn(
-        //         `Database contain no tables with schemaname = 'public' `,
+        //         `Database contain no tables`,
         //     );
         //     return;
         // }
@@ -74,7 +74,7 @@ export class TestingController {
 
         if (!relatedTables) {
                 console.warn(
-                    `Database contain no tables with schemaname = 'public' `,
+                    `Database contain no tables`,
                 );
                 return;
             }

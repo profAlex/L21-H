@@ -1,9 +1,11 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { SQLUserSession } from '../../domain/sql-session.entity';
+import { UserSession } from '../../domain/type-orm-session.entity';
+import { User } from '../../../user-accounts/domain/type-orm-user.entity';
 
 export type SessionParameters = {
     userId: string;
@@ -21,39 +23,52 @@ type SoftDeleteSessionsParams = {
 export class SessionsCommandRepository {
     constructor(
         @InjectDataSource() protected dataSource: DataSource,
+        @InjectRepository(UserSession)
+        private readonly userSessionRepository: Repository<UserSession>,
     ) {}
 
-    async SQLsave(session: SQLUserSession): Promise<void> {
-        const query = `
-            INSERT INTO public."user_sessions" ("id",
-                                                "user_id",
-                                                "device_uuid",
-                                                "device_name",
-                                                "device_ip",
-                                                "issued_at",
-                                                "expires_at",
-                                                "created_at",
-                                                "deleted_at")
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT ("id") DO
-            UPDATE SET
-                "issued_at" = EXCLUDED."issued_at",
-                "expires_at" = EXCLUDED."expires_at",
-                "deleted_at" = EXCLUDED."deleted_at";
-        `;
+    // async SQLsave(session: SQLUserSession): Promise<void> {
+    //     const query = `
+    //         INSERT INTO public."user_sessions" ("id",
+    //                                             "user_id",
+    //                                             "device_uuid",
+    //                                             "device_name",
+    //                                             "device_ip",
+    //                                             "issued_at",
+    //                                             "expires_at",
+    //                                             "created_at",
+    //                                             "deleted_at")
+    //         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT ("id") DO
+    //         UPDATE SET
+    //             "issued_at" = EXCLUDED."issued_at",
+    //             "expires_at" = EXCLUDED."expires_at",
+    //             "deleted_at" = EXCLUDED."deleted_at";
+    //     `;
+    //
+    //     const parameters = [
+    //         session.id,
+    //         session.userId,
+    //         session.deviceId,
+    //         session.deviceName,
+    //         session.deviceIp,
+    //         session.issuedAt,
+    //         session.expiresAt,
+    //         session.createdAt,
+    //         session.deletedAt,
+    //     ];
+    //
+    //     await this.dataSource.query(query, parameters);
+    // }
 
-        const parameters = [
-            session.id,
-            session.userId,
-            session.deviceId,
-            session.deviceName,
-            session.deviceIp,
-            session.issuedAt,
-            session.expiresAt,
-            session.createdAt,
-            session.deletedAt,
-        ];
+    async SQLsave(sessionDomain: SQLUserSession): Promise<void> {
+        // сначала простой класс сессии (доменная сущность) превращаем в TypeORM сущность (Db-модель)
+        const sessionEntity = UserSession.fromDomain(sessionDomain);
 
-        await this.dataSource.query(query, parameters);
+        // сохраняем с помощью встроенного вспомогательного объекта TypeORM - Repository
+        // save работает по принципу upsert: если id уже есть, обновит; если нет — создаст.
+        await this.userSessionRepository.save(sessionEntity);
+
+        // Может быть использовать repository.insert()?? если данный метод только создает новые объекты
     }
 
     async toTestCreateDb() {
@@ -105,31 +120,50 @@ export class SessionsCommandRepository {
         // CREATE INDEX IF NOT EXISTS "idx_user_sessions_user_id" ON "user_sessions" ("user_id");`);
     }
 
+    // async SQLfindSessionBySessionId(
+    //     sessionId: string,
+    // ): Promise<SQLUserSession | null> {
+    //     const query = `
+    //         SELECT "id",
+    //                "user_id",
+    //                "device_uuid",
+    //                "device_name",
+    //                "device_ip",
+    //                "issued_at",
+    //                "expires_at",
+    //                "created_at",
+    //                "deleted_at"
+    //         FROM public."user_sessions"
+    //         WHERE "id" = $1
+    //           AND "deleted_at" IS NULL;
+    //     `;
+    //
+    //     const [sessionRow] = await this.dataSource.query(query, [sessionId]);
+    //
+    //     if (!sessionRow) {
+    //         return null;
+    //     }
+    //
+    //     return SQLUserSession.reconstructInstance(sessionRow);
+    // }
+
     async SQLfindSessionBySessionId(
         sessionId: string,
     ): Promise<SQLUserSession | null> {
-        const query = `
-            SELECT "id",
-                   "user_id",
-                   "device_uuid",
-                   "device_name",
-                   "device_ip",
-                   "issued_at",
-                   "expires_at",
-                   "created_at",
-                   "deleted_at"
-            FROM public."user_sessions"
-            WHERE "id" = $1
-              AND "deleted_at" IS NULL;
-        `;
+        const sessionEntity = await this.userSessionRepository.findOne({
+            where: {
+                id: sessionId,
+                deleted_at: IsNull(), // проверяем, что сессия не удалена
+            },
+        });
 
-        const [sessionRow] = await this.dataSource.query(query, [sessionId]);
-
-        if (!sessionRow) {
+        if (!sessionEntity) {
             return null;
         }
 
-        return SQLUserSession.reconstructInstance(sessionRow);
+        // избегаем протекания информации о структуре бд в методы описывающие доменную сущность
+        // путем переноса логики маппинга в нестатический метод вытащенной сущности TypeORM бд
+        return sessionEntity.toDomain();
     }
 
 

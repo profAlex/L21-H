@@ -20,7 +20,6 @@ import { NewPasswordInputDto } from './input-dto/new-pasword.input-dto';
 import { RegistrationEmailResendingInputDto } from './input-dto/registration-email-resending.input-dto';
 import { JwtAuthGuard } from '../guards/bearer/jwt.auth-guard';
 import { SQLMeViewDto } from './view-dto/me.view-dto';
-import { UserLoginInputDto } from '../../user-accounts/api/input-dto/login-user.input-dto';
 import { Response, Request } from 'express';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -34,15 +33,12 @@ import { CurrentUserMetaData } from '../decorators/extract-meta-data-from-req.de
 import { UserRefreshTokenContextAndMetaDataDto } from '../decorators/dto/user-refresh-token-context-and-meta-data.dto';
 import { Logout } from '../application/usecases/logout.usecase';
 import { CustomThrottlerGuard } from '../guards/custom-throttler/custom-throttler.guard';
-import { TestQuery } from '../application/usecases/test-query.usecase';
-import { TestCreateDb } from '../application/usecases/test-create-db.usecase';
 import { PasswordRecoveryCommand } from '../application/usecases/password-recovery.usecase';
 import { NewPasswordCommand } from '../application/usecases/new-password.usecase';
 import { ConfirmRegistrationCommand } from '../application/usecases/registration-confirmation.usecase';
 import { RegisterUserCommand } from '../application/usecases/registration.usecase';
 import {
     ResendRegistrationEmailCommand,
-    ResendRegistrationEmailHandler,
 } from '../application/usecases/resend-registration-email.usecase';
 import { GetMeInfoQuery } from '../application/usecases/get-me-info.usecase';
 
@@ -75,7 +71,7 @@ export class AuthController {
 
         res.cookie('refreshToken', tokensPair.refreshToken, {
             httpOnly: true,
-            secure: true,
+            secure: true, // вот этот параметр может рушить тестирование в локальной среде из-за того что по http не будет сохраняться кука!
             // sameSite: 'none',
             path: '/',
             expires: tokensPair.expiresAt,
