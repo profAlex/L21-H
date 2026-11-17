@@ -45,23 +45,39 @@ export class TestingController {
     @HttpCode(HttpStatus.NO_CONTENT)
     async deleteAll() {
 
-        // выдергиваем список всех существующих таблиц в схеме 'public'
-        const availableTables: Array<{ tablename: string }> = await this.dataSource
-            .query(`
-                SELECT tablename
-                FROM pg_tables
-                WHERE schemaname = 'public';
-            `);
+        // // способ 1: достать имена всех имеющихся таблиц через чистый RAW SQL
+        // // выдергиваем список всех существующих таблиц в схеме 'public'
+        // const availableTables: Array<{ tablename: string }> = await this.dataSource
+        //     .query(`
+        //         SELECT tablename
+        //         FROM pg_tables
+        //         WHERE schemaname = 'public';
+        //     `);
+        //
+        // if (availableTables.length === 0) {
+        //     console.warn(
+        //         `Database contain no tables with schemaname = 'public' `,
+        //     );
+        //     return;
+        // }
+        //
+        // //  строку вида: "user_sessions", "users"
+        // const relatedTables = availableTables.map((table) => {return `"${table.tablename}"`}).join(',');
 
-        if (availableTables.length === 0) {
-            console.warn(
-                `Database contain no tables with schemaname = 'public' `,
-            );
-            return;
-        }
+        // способ 2: через коллекцию метаданных сущностей
+        const entities = this.dataSource.entityMetadatas;
 
-        //  строку вида: "user_sessions", "users"
-        const relatedTables = availableTables.map((table) => {return `"${table.tablename}"`}).join(',');
+        // Собираем имена всех таблиц из метаданных TypeORM
+        const relatedTables = entities
+            .map((entity) => `"${entity.tableName}"`)
+            .join(', ');
+
+        if (!relatedTables) {
+                console.warn(
+                    `Database contain no tables with schemaname = 'public' `,
+                );
+                return;
+            }
 
         // чистим через TRUNCATE
         await this.dataSource.query(`
@@ -71,9 +87,7 @@ export class TestingController {
         // CASCADE - нужен чтобы не высчитывать порядок очистки таблиц в коде (сначала дочерние а потом  родительские), чтобы параллельно автоматически очищать и родительские и зависящие дочерние таблицы
 
         console.warn(
-            `Successfully cleared ${availableTables.length} tables: ${relatedTables} `,
+            `Successfully cleared ${entities.length} tables: ${relatedTables} `,
         );
-
-        // return relatedTables;
     }
 }
