@@ -17,18 +17,18 @@ export class PasswordRecoveryHandler implements ICommandHandler<PasswordRecovery
     ) {}
 
     async execute({ email }: PasswordRecoveryCommand): Promise<void> {
-        // Ищем подтвержденного пользователя в БД
+        // ищем подтвержденного пользователя в БД
         const user =
             await this.usersCommandRepository.SQLfindConfirmedUserByEmail(
                 email,
             );
 
         if (!user) {
-            // Возвращаем успех даже если email не найден (защита от перечисления пользователей)
+            // возвращаем успех даже если email не найден (защита от злоумышленников, пытающихся узнать существующие и несуществующие емейлы пользователей перебором)
             return;
         }
 
-        // Генерируем код восстановления и обновляем доменную модель пользователя
+        // если подтвержденный пользователь найден, то генерируем код восстановления и обновляем доменную модель пользователя
         const recoveryCode = UUIDGeneratorUtil.generateUUID();
         user.generateRecoveryCode(recoveryCode);
 

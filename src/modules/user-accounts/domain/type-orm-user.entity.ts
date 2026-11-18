@@ -65,4 +65,23 @@ export class User extends BaseDBEntity {
 
         return userEntity;
     }
+
+    toDomain(): SQLUser {
+        return SQLUser.reconstruct({
+            id: this.id,
+            login: this.login,
+            email: this.email,
+            passwordHash: this.password_hash,
+            isEmailConfirmed: this.is_email_confirmed,
+            emailConfirmationCode: this.email_confirmation_code,
+            emailConfirmationExpirationDate: this.email_confirmation_expiration_date,
+            firstName: this.first_name,
+            lastName: this.last_name,
+            createdAt: this.created_at,
+            updatedAt: this.updated_at,
+            deletedAt: this.deleted_at,
+            recoveryCode: this.recovery_code,
+            recoveryCodeExpirationDate: this.recovery_code_expiration_date,
+        });
+    }
 }

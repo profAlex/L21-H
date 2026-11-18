@@ -60,36 +60,52 @@ export class SQLUser {
         return user;
     }
 
-    static reconstruct(rawDataFromDb: any): SQLUser {
+    static reconstruct(rawDataFromDto: {
+        id: string;
+        login: string;
+        email: string;
+        passwordHash: string;
+        isEmailConfirmed: boolean;
+        emailConfirmationCode: string | null;
+        emailConfirmationExpirationDate: Date | string | null;
+        firstName: string;
+        lastName: string;
+        createdAt: Date | string;
+        updatedAt: Date | string;
+        deletedAt: Date | string | null;
+        recoveryCode: string | null;
+        recoveryCodeExpirationDate: Date | string | null;
+    }): SQLUser {
         const user = new SQLUser();
 
-        user.id = rawDataFromDb.id;
-        user.login = rawDataFromDb.login;
-        user.email = rawDataFromDb.email;
-        user.passwordHash = rawDataFromDb.password_hash;
-        user.isEmailConfirmed = rawDataFromDb.is_email_confirmed;
+        user.id = rawDataFromDto.id;
+        user.login = rawDataFromDto.login;
+        user.email = rawDataFromDto.email;
+        user.passwordHash = rawDataFromDto.passwordHash;
+        user.isEmailConfirmed = rawDataFromDto.isEmailConfirmed;
 
         user.emailConfirmationInfo = {
-            confirmationCode: rawDataFromDb.email_confirmation_code,
-            expirationDate: rawDataFromDb.email_confirmation_expiration_date
-                ? new Date(rawDataFromDb.email_confirmation_expiration_date)
+            confirmationCode: rawDataFromDto.emailConfirmationCode,
+            expirationDate: rawDataFromDto.emailConfirmationExpirationDate
+                ? new Date(rawDataFromDto.emailConfirmationExpirationDate)
                 : null,
         };
 
         user.name = {
-            firstName: rawDataFromDb.first_name,
-            lastName: rawDataFromDb.last_name,
+            firstName: rawDataFromDto.firstName,
+            lastName: rawDataFromDto.lastName,
         };
 
-        user.createdAt = new Date(rawDataFromDb.created_at);
-        user.updatedAt = new Date(rawDataFromDb.updated_at);
-        user.deletedAt = rawDataFromDb.deleted_at
-            ? new Date(rawDataFromDb.deleted_at)
+        user.createdAt = new Date(rawDataFromDto.createdAt);
+        user.updatedAt = new Date(rawDataFromDto.updatedAt);
+        user.deletedAt = rawDataFromDto.deletedAt
+            ? new Date(rawDataFromDto.deletedAt)
             : null;
-        user.recoveryCode = rawDataFromDb.recovery_code;
+
+        user.recoveryCode = rawDataFromDto.recoveryCode;
         user.recoveryCodeExpirationDate =
-            rawDataFromDb.recovery_code_expiration_date
-                ? new Date(rawDataFromDb.recovery_code_expiration_date)
+            rawDataFromDto.recoveryCodeExpirationDate
+                ? new Date(rawDataFromDto.recoveryCodeExpirationDate)
                 : null;
 
         return user;

@@ -2,11 +2,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { SQLUser } from '../domain/sql-user.entitry';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../domain/type-orm-user.entity';
-
 
 export interface UserDbRow {
     id: string;
@@ -14,7 +13,6 @@ export interface UserDbRow {
     email: string;
     created_at: Date;
 }
-
 
 @Injectable()
 export class UsersCommandRepository {
@@ -38,7 +36,6 @@ export class UsersCommandRepository {
     //     await user.save();
     //     // console.log("<----------------TEST HERE 6");
     // }
-
 
     /* language=PostgreSQL */
     // async SQLsave(user: SQLUser): Promise<void> {
@@ -118,12 +115,12 @@ export class UsersCommandRepository {
     //     return SQLUser.reconstruct(userRow);
     // }
 
-
     async SQLfindUserById(id: string): Promise<boolean> {
-        const result = await this.userRepository.createQueryBuilder()
+        const result = await this.userRepository
+            .createQueryBuilder()
             .update(User)
-            .set({deleted_at: new Date(), updated_at: new Date()})
-            .where('id = :id', {id})
+            .set({ deleted_at: new Date(), updated_at: new Date() })
+            .where('id = :id', { id })
             .andWhere('deleted_at IS NULL')
             .execute();
 
@@ -135,50 +132,67 @@ export class UsersCommandRepository {
         //     .andWhere('deleted_at IS NULL')
         //     .execute();
 
-        return (Boolean(result.affected && result.affected > 0))
+        return Boolean(result.affected && result.affected > 0);
     }
 
-    async SQLfindConfirmedUserByEmail(email: string): Promise<SQLUser | null> {
-        const query = `
-            SELECT 
-                "id",
-                "login",
-                "email",
-                "password_hash",
-                "created_at",
-                "is_email_confirmed",
-                "email_confirmation_code",
-                "email_confirmation_expiration_date",
-                "recovery_code",
-                "recovery_code_expiration_date"
-            FROM public."users"
-            WHERE "email" = $1 AND "is_email_confirmed" = true;
-        `;
+    // async SQLfindConfirmedUserByEmail(email: string): Promise<SQLUser | null> {
+    //     const query = `
+    //         SELECT
+    //             "id",
+    //             "login",
+    //             "email",
+    //             "password_hash",
+    //             "created_at",
+    //             "first_name",
+    //             "last_name",
+    //             "is_email_confirmed",
+    //             "email_confirmation_code",
+    //             "email_confirmation_expiration_date",
+    //             "recovery_code",
+    //             "recovery_code_expiration_date"
+    //         FROM public."users"
+    //         WHERE "email" = $1 AND "is_email_confirmed" = true;
+    //     `;
+    //
+    //     const [userRow] = await this.dataSource.query(query, [email]);
+    //
+    //     if (!userRow) {
+    //         return null;
+    //     }
+    //
+    //     return SQLUser.reconstruct(userRow);
+    // }
 
-        const [userRow] = await this.dataSource.query(query, [email]);
+    async SQLfindConfirmedUserByEmail(email: string): Promise<SQLUser | null> {
+        const userRow = await this.userRepository.findOne({
+            where: {
+                email: email,
+                deleted_at: IsNull(), // проверяем, что запись юзера не удалена
+            },
+        });
 
         if (!userRow) {
             return null;
         }
 
-        return SQLUser.reconstruct(userRow);
+        return userRow.toDomain();
     }
 
-
-    async SQLfindUserByRecoveryCode(recoveryCode: string): Promise<SQLUser | null> {
+    async SQLfindUserByRecoveryCode(
+        recoveryCode: string,
+    ): Promise<SQLUser | null> {
         const query = `
-            SELECT 
-                "id",
-                "login",
-                "email",
-                "password_hash",
-                "created_at",
-                "is_email_confirmed",
-                "email_confirmation_code",
-                "email_confirmation_expiration_date",
-                "recovery_code",
-                "recovery_code_expiration_date",
-                "deleted_at"
+            SELECT "id",
+                   "login",
+                   "email",
+                   "password_hash",
+                   "created_at",
+                   "is_email_confirmed",
+                   "email_confirmation_code",
+                   "email_confirmation_expiration_date",
+                   "recovery_code",
+                   "recovery_code_expiration_date",
+                   "deleted_at"
             FROM public."users"
             WHERE "recovery_code" = $1
               AND "recovery_code_expiration_date" >= NOW()
@@ -194,33 +208,33 @@ export class UsersCommandRepository {
         return SQLUser.reconstruct(userRow);
     }
 
-
     async SQLfindUserByConfirmationCode(
         confirmationCode: string,
     ): Promise<SQLUser | null> {
         const query = `
-            SELECT
-                "id",
-                "login",
-                "email",
-                "password_hash",
-                "first_name",
-                "last_name",
-                "created_at",
-                "updated_at",
-                "is_email_confirmed",
-                "email_confirmation_code",
-                "email_confirmation_expiration_date",
-                "recovery_code",
-                "recovery_code_expiration_date",
-                "deleted_at"
+            SELECT "id",
+                   "login",
+                   "email",
+                   "password_hash",
+                   "first_name",
+                   "last_name",
+                   "created_at",
+                   "updated_at",
+                   "is_email_confirmed",
+                   "email_confirmation_code",
+                   "email_confirmation_expiration_date",
+                   "recovery_code",
+                   "recovery_code_expiration_date",
+                   "deleted_at"
             FROM public."users"
             WHERE "email_confirmation_code" = $1
               AND "email_confirmation_expiration_date" >= NOW()
               AND "deleted_at" IS NULL;
         `;
 
-        const [userRow] = await this.dataSource.query(query, [confirmationCode]);
+        const [userRow] = await this.dataSource.query(query, [
+            confirmationCode,
+        ]);
 
         if (!userRow) {
             return null;
@@ -229,38 +243,33 @@ export class UsersCommandRepository {
         return SQLUser.reconstruct(userRow);
     }
 
-
     async SQLcheckIfUserExists(
         login: string,
         email: string,
     ): Promise<'login' | 'email' | null> {
         const checkLoginQuery = `
-            SELECT EXISTS (
-                SELECT 1 
-                FROM public."users" 
-                WHERE "login" = $1 AND "deleted_at" IS NULL
-            ) as "exists";
+            SELECT EXISTS (SELECT 1
+                           FROM public."users"
+                           WHERE "login" = $1
+                             AND "deleted_at" IS NULL) as "exists";
         `;
-        const [loginResult] = await this.dataSource.query<{ exists: boolean }[]>(
-            checkLoginQuery,
-            [login],
-        );
+        const [loginResult] = await this.dataSource.query<
+            { exists: boolean }[]
+        >(checkLoginQuery, [login]);
 
         if (loginResult?.exists) {
             return 'login';
         }
 
         const checkEmailQuery = `
-            SELECT EXISTS (
-                SELECT 1 
-                FROM public."users" 
-                WHERE "email" = $1 AND "deleted_at" IS NULL
-            ) as "exists";
+            SELECT EXISTS (SELECT 1
+                           FROM public."users"
+                           WHERE "email" = $1
+                             AND "deleted_at" IS NULL) as "exists";
         `;
-        const [emailResult] = await this.dataSource.query<{ exists: boolean }[]>(
-            checkEmailQuery,
-            [email],
-        );
+        const [emailResult] = await this.dataSource.query<
+            { exists: boolean }[]
+        >(checkEmailQuery, [email]);
 
         if (emailResult?.exists) {
             return 'email';
@@ -269,15 +278,16 @@ export class UsersCommandRepository {
         return null;
     }
 
-
-    async SQLfindNotConfirmedByEmail(sentEmail: string): Promise<SQLUser | null> {
+    async SQLfindNotConfirmedByEmail(
+        sentEmail: string,
+    ): Promise<SQLUser | null> {
         const query = `
             SELECT *
             FROM public.users
             WHERE email = $1
               AND is_email_confirmed = false
               AND deleted_at IS NULL
-                LIMIT 1;
+            LIMIT 1;
         `;
 
         const [rawDataFromDb] = await this.dataSource.query(query, [sentEmail]);
