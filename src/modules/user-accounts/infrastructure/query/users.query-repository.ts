@@ -5,7 +5,7 @@ import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.
 import { SQLMeViewDto } from '../../../authorisation/api/view-dto/me.view-dto';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
-import { Brackets, DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, IsNull, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../../domain/type-orm-user.entity';
 
@@ -53,22 +53,57 @@ export class UsersQueryRepository {
     }
 
 
-    async SQLgetMeByIdOrNotFoundFail(id: string): Promise<SQLMeViewDto> {
-        // все алиасы без двойных кавычек принудительно приводятся к нижнему регистру (userid)!
-        const meQuery = `
-            SELECT id AS "userId", login, email
-            FROM public."users"
-            WHERE id = $1
-              AND deleted_at IS NULL;
-        `;
+    // async SQLgetMeByIdOrNotFoundFail(id: string): Promise<SQLMeViewDto> {
+    //     // все алиасы без двойных кавычек принудительно приводятся к нижнему регистру (userid)!
+    //     const meQuery = `
+    //         SELECT id AS "userId", login, email
+    //         FROM public."users"
+    //         WHERE id = $1
+    //           AND deleted_at IS NULL;
+    //     `;
+    //
+    //     const [userRow] = await this.dataSource.query<
+    //         {
+    //             userId: string;
+    //             login: string;
+    //             email: string;
+    //         }[]
+    //     >(meQuery, [id]);
+    //
+    //     if (!userRow) {
+    //         // throw new NotFoundException('user not found');
+    //         throw new DomainException({
+    //             code: DomainExceptionCode.UserNotFound,
+    //             message: 'User not found',
+    //         });
+    //     }
+    //
+    //     return SQLMeViewDto.mapToView(userRow);
+    // }
 
-        const [userRow] = await this.dataSource.query<
-            {
-                userId: string;
-                login: string;
-                email: string;
-            }[]
-        >(meQuery, [id]);
+
+    async SQLgetMeByIdOrNotFoundFail(id: string): Promise<SQLMeViewDto> {
+
+        // const userEntity = await this.userRepository.findOne({
+        //     where: {
+        //         id: id,
+        //         deleted_at: IsNull()
+        //     },
+        //     // Перечисляем только те поля сущности, которые нам нужны
+        //     select: ['id', 'login', 'email'],
+        // });
+        // но обертка findOne не может сделать алиасы, поэтому используем квери билдер и вызов getRawOne чтобы получить простой плоский объект в ответе
+
+        const userRow = await this.userRepository
+            .createQueryBuilder('u')
+            .select([
+                'u.id AS "userId"', // Выбираем id и сразу даем нужный алиас
+                'u.login AS "login"',
+                'u.email AS "email"',
+            ])
+            .where('u.id = :id', { id })
+            .andWhere('u.deleted_at IS NULL')
+            .getRawOne<{ userId: string; login: string; email: string }>(); // 👈 getRawOne возвращает плоский объект по нашим алиасам
 
         if (!userRow) {
             // throw new NotFoundException('user not found');
@@ -80,6 +115,7 @@ export class UsersQueryRepository {
 
         return SQLMeViewDto.mapToView(userRow);
     }
+
 
     // async getAllUsers(
     //     query: GetUsersQueryParams,
