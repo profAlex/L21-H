@@ -177,6 +177,7 @@ export class UsersCommandRepository {
 
         return userRow.toDomain();
     }
+
     //
     // async SQLfindUserByRecoveryCode(
     //     recoveryCode: string,
@@ -211,12 +212,14 @@ export class UsersCommandRepository {
     async SQLfindUserByRecoveryCode(
         recoveryCode: string,
     ): Promise<SQLUser | null> {
-
         const queryBuilder = this.userRepository.createQueryBuilder('u');
         queryBuilder.where('u.deleted_at IS NULL');
-        queryBuilder.andWhere('u.recovery_code = :passedRecoveryCode',{passedRecoveryCode: recoveryCode} );
-        queryBuilder.andWhere(`u.recovery_code_expiration_date >= CURRENT_TIMESTAM`);
-
+        queryBuilder.andWhere('u.recovery_code = :passedRecoveryCode', {
+            passedRecoveryCode: recoveryCode,
+        });
+        queryBuilder.andWhere(
+            `u.recovery_code_expiration_date >= CURRENT_TIMESTAMP`,
+        );
 
         const userRow = await queryBuilder.getOne();
 
@@ -227,40 +230,61 @@ export class UsersCommandRepository {
         return userRow.toDomain();
     }
 
+    // async SQLfindUserByConfirmationCode(
+    //     confirmationCode: string,
+    // ): Promise<SQLUser | null> {
+    //     const query = `
+    //         SELECT "id",
+    //                "login",
+    //                "email",
+    //                "password_hash",
+    //                "first_name",
+    //                "last_name",
+    //                "created_at",
+    //                "updated_at",
+    //                "is_email_confirmed",
+    //                "email_confirmation_code",
+    //                "email_confirmation_expiration_date",
+    //                "recovery_code",
+    //                "recovery_code_expiration_date",
+    //                "deleted_at"
+    //         FROM public."users"
+    //         WHERE "email_confirmation_code" = $1
+    //           AND "email_confirmation_expiration_date" >= NOW()
+    //           AND "deleted_at" IS NULL;
+    //     `;
+    //
+    //     const [userRow] = await this.dataSource.query(query, [
+    //         confirmationCode,
+    //     ]);
+    //
+    //     if (!userRow) {
+    //         return null;
+    //     }
+    //
+    //     return SQLUser.reconstruct(userRow);
+    // }
+
+
     async SQLfindUserByConfirmationCode(
         confirmationCode: string,
     ): Promise<SQLUser | null> {
-        const query = `
-            SELECT "id",
-                   "login",
-                   "email",
-                   "password_hash",
-                   "first_name",
-                   "last_name",
-                   "created_at",
-                   "updated_at",
-                   "is_email_confirmed",
-                   "email_confirmation_code",
-                   "email_confirmation_expiration_date",
-                   "recovery_code",
-                   "recovery_code_expiration_date",
-                   "deleted_at"
-            FROM public."users"
-            WHERE "email_confirmation_code" = $1
-              AND "email_confirmation_expiration_date" >= NOW()
-              AND "deleted_at" IS NULL;
-        `;
 
-        const [userRow] = await this.dataSource.query(query, [
-            confirmationCode,
-        ]);
+        const queryBuilder = this.userRepository.createQueryBuilder('u');
+
+        queryBuilder.where('u.deleted_at IS NULL')
+            .andWhere('u.email_confirmation_code = :passedConfirmationCode', {passedConfirmationCode: confirmationCode})
+            .andWhere('u.email_confirmation_expiration_date >= CURRENT_TIMESTAMP');
+
+        const userRow = await queryBuilder.getOne();
 
         if (!userRow) {
             return null;
         }
 
-        return SQLUser.reconstruct(userRow);
+        return userRow.toDomain();
     }
+
 
     async SQLcheckIfUserExists(
         login: string,
