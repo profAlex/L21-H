@@ -45,19 +45,44 @@ export class SQLUserSession {
     /**
      * Маппинг из сырых данных PostgreSQL (SQL query) в объект домена
      */
-    static reconstructInstance(rawDataFromDb: any): SQLUserSession {
+    static reconstructInstance(rawDataFromDto: {
+        id: string;
+        userId: string;
+        deviceId: string;
+        deviceName: string;
+        deviceIp: string;
+        issuedAt: Date | string;
+        expiresAt: Date | string;
+        createdAt: Date | string;
+        deletedAt: Date | string | null;
+    }): SQLUserSession {
         const session = new SQLUserSession();
 
-        session.id = rawDataFromDb.id;
-        session.userId = rawDataFromDb.user_id;
-        session.deviceId = rawDataFromDb.device_uuid;
-        session.deviceName = rawDataFromDb.device_name;
-        session.deviceIp = rawDataFromDb.device_ip;
-        session.issuedAt = new Date(rawDataFromDb.issued_at);
-        session.expiresAt = new Date(rawDataFromDb.expires_at);
-        session.createdAt = new Date(rawDataFromDb.created_at);
-        session.deletedAt = rawDataFromDb.deleted_at
-            ? new Date(rawDataFromDb.deleted_at)
+        session.id = rawDataFromDto.id;
+        session.userId = rawDataFromDto.userId;
+        session.deviceId = rawDataFromDto.deviceId;
+        session.deviceName = rawDataFromDto.deviceName;
+        session.deviceIp = rawDataFromDto.deviceIp;
+
+        // если это уже объект Date — оставляем как есть, если строка или число — парсим через new Date(),
+        // в противном случае будет ошибка преобразования и будет здесь
+        // возвращаться NaN (если внутрь уже был передан объект типа Date)
+        session.issuedAt = rawDataFromDto.issuedAt instanceof Date
+            ? rawDataFromDto.issuedAt
+            : new Date(rawDataFromDto.issuedAt);
+
+        session.expiresAt = rawDataFromDto.expiresAt instanceof Date
+            ? rawDataFromDto.expiresAt
+            : new Date(rawDataFromDto.expiresAt);
+
+        session.createdAt = rawDataFromDto.createdAt instanceof Date
+            ? rawDataFromDto.createdAt
+            : new Date(rawDataFromDto.createdAt);
+
+        session.deletedAt = rawDataFromDto.deletedAt
+            ? (rawDataFromDto.deletedAt instanceof Date
+                ? rawDataFromDto.deletedAt
+                : new Date(rawDataFromDto.deletedAt))
             : null;
 
         return session;

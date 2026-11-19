@@ -89,7 +89,7 @@ export class UsersQueryRepository {
         //         id: id,
         //         deleted_at: IsNull()
         //     },
-        //     // Перечисляем только те поля сущности, которые нам нужны
+        //     // перечисляем только те поля сущности, которые нам нужны
         //     select: ['id', 'login', 'email'],
         // });
         // но обертка findOne не может сделать алиасы, поэтому используем квери билдер и вызов getRawOne чтобы получить простой плоский объект в ответе
@@ -103,7 +103,7 @@ export class UsersQueryRepository {
             ])
             .where('u.id = :id', { id })
             .andWhere('u.deleted_at IS NULL')
-            .getRawOne<{ userId: string; login: string; email: string }>(); // 👈 getRawOne возвращает плоский объект по нашим алиасам
+            .getRawOne<{ userId: string; login: string; email: string }>(); // здесь как раз getRawOne возвращает плоский объект по нашим алиасам
 
         if (!userRow) {
             // throw new NotFoundException('user not found');
@@ -183,12 +183,12 @@ export class UsersQueryRepository {
             queryBuilder.andWhere(
                 new Brackets((qb) => {
                     if (query.searchLoginTerm) {
-                        queryBuilder.orWhere('u.login ILIKE :loginTestName1', {
+                        qb.orWhere('u.login ILIKE :loginTestName1', {
                             loginTestName1: `%${query.searchLoginTerm}%`,
                         });
                     }
                     if (query.searchEmailTerm) {
-                        queryBuilder.orWhere('u.email ILIKE :emailTestName1', {
+                        qb.orWhere('u.email ILIKE :emailTestName1', {
                             emailTestName1: `%${query.searchEmailTerm}%`,
                         });
                     }

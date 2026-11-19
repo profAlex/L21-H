@@ -46,16 +46,16 @@ export class RegisterUserHandler implements ICommandHandler<RegisterUserCommand>
             });
         }
 
-        // 2. Генерируем хэш пароля
+        // генерируем хэш пароля
         const passwordHash = await this.cryptoService.generateHash(password);
         if (!passwordHash) {
             throw new InternalServerErrorException("Couldn't generate password hash");
         }
 
-        // 3. Генерируем код подтверждения
+        // генерируем код подтверждения
         const confirmationCode = UUIDGeneratorUtil.generateUUID();
 
-        // 4. Инстанцируем доменный объект через ваш фабричный метод
+        // создаем доменный объект через ваш фабричный метод
         const newUser = SQLUser.createInstance({
             login,
             email,
@@ -74,7 +74,7 @@ export class RegisterUserHandler implements ICommandHandler<RegisterUserCommand>
         }
 
         // console.warn("...about to send email... code:", codeToSend );
-        // 6. Отправляем подтверждение на почту
+        // отправляем подтверждение на почту
         await this.emailService.sendConfirmationEmail(
             newUser.email,
             codeToSend,

@@ -12,7 +12,6 @@ import {
 import { LocalAuthGuard } from '../guards/local/local.auth-guard';
 import { ExtractUserIfExistsFromRequest } from '../decorators/extract-user-if-exists.decorator';
 import { UserAccessTokenContextDto } from '../guards/dto/user-access-token-context.dto';
-import { AuthService } from '../application/auth.service';
 import { RegisterNewUserDto } from './input-dto/register-new-user.input-dto';
 import { RegistrationConfirmationInputDto } from './input-dto/registration-confirmation.input-dto';
 import { PasswordRecoveryInputDto } from './input-dto/password-recovery.input-dto';
@@ -21,7 +20,6 @@ import { RegistrationEmailResendingInputDto } from './input-dto/registration-ema
 import { JwtAuthGuard } from '../guards/bearer/jwt.auth-guard';
 import { SQLMeViewDto } from './view-dto/me.view-dto';
 import { Response, Request } from 'express';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
     LoginUser,
@@ -32,7 +30,6 @@ import { RefreshToken } from '../application/usecases/refresh-token.usecase';
 import { CurrentUserMetaData } from '../decorators/extract-meta-data-from-req.decorator';
 import { UserRefreshTokenContextAndMetaDataDto } from '../decorators/dto/user-refresh-token-context-and-meta-data.dto';
 import { Logout } from '../application/usecases/logout.usecase';
-import { CustomThrottlerGuard } from '../guards/custom-throttler/custom-throttler.guard';
 import { PasswordRecoveryCommand } from '../application/usecases/password-recovery.usecase';
 import { NewPasswordCommand } from '../application/usecases/new-password.usecase';
 import { ConfirmRegistrationCommand } from '../application/usecases/registration-confirmation.usecase';
@@ -41,11 +38,12 @@ import {
     ResendRegistrationEmailCommand,
 } from '../application/usecases/resend-registration-email.usecase';
 import { GetMeInfoQuery } from '../application/usecases/get-me-info.usecase';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from '../guards/custom-throttler/custom-throttler.guard';
 
 @Controller('auth')
 export class AuthController {
     constructor(
-        private authService: AuthService,
         private readonly commandBus: CommandBus,
         private readonly queryBus: QueryBus,
     ) {
@@ -54,8 +52,8 @@ export class AuthController {
 
     // Try login user to the system
     @HttpCode(HttpStatus.OK)
-    // @UseGuards(ThrottlerGuard, LocalAuthGuard)
-    @UseGuards(LocalAuthGuard)
+    @UseGuards(ThrottlerGuard, LocalAuthGuard)
+    // @UseGuards(LocalAuthGuard)
     @Post('login')
     async login(
         // @Body() body: UserLoginInputDto,
@@ -117,7 +115,7 @@ export class AuthController {
 
     // Password recovery via Email confirmation. Email should be sent with RecoveryCode inside
     @HttpCode(HttpStatus.NO_CONTENT)
-    // @UseGuards(ThrottlerGuard)
+    @UseGuards(ThrottlerGuard)
     @Post('password-recovery')
     async passwordRecovery(
         @Body() body: PasswordRecoveryInputDto,
@@ -127,7 +125,7 @@ export class AuthController {
 
     // Confirm Password recovery
     @HttpCode(HttpStatus.NO_CONTENT)
-    // @UseGuards(ThrottlerGuard)
+    @UseGuards(ThrottlerGuard)
     @Post('new-password')
     async newPassword(@Body() body: NewPasswordInputDto): Promise<void> {
         return this.commandBus.execute(
@@ -137,7 +135,7 @@ export class AuthController {
 
     // Confirm registration
     @HttpCode(HttpStatus.NO_CONTENT)
-    // @UseGuards(ThrottlerGuard)
+    @UseGuards(ThrottlerGuard)
     @Post('registration-confirmation')
     async registrationConfirmation(
         @Body() body: RegistrationConfirmationInputDto,
@@ -149,7 +147,7 @@ export class AuthController {
 
     // Registration in the system. Email with confirmation code will be send to passed email address
     @HttpCode(HttpStatus.NO_CONTENT)
-    // @UseGuards(ThrottlerGuard)
+    @UseGuards(ThrottlerGuard)
     @Post('registration')
     async registration(@Body() body: RegisterNewUserDto) {
         return this.commandBus.execute(
@@ -159,7 +157,7 @@ export class AuthController {
 
     // Resend confirmation registration Email if user exists
     @HttpCode(HttpStatus.NO_CONTENT)
-    // @UseGuards(ThrottlerGuard)
+    @UseGuards(ThrottlerGuard)
     @Post('registration-email-resending')
     async registrationEmailResending(
         @Body() body: RegistrationEmailResendingInputDto,

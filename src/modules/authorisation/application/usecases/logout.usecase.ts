@@ -25,6 +25,7 @@ export class LogoutHandler implements ICommandHandler<Logout> {
                       sessionId
     }: Logout): Promise<void> {
         const session = await this.sessionsCommandRepository.SQLfindSessionBySessionId(sessionId);
+
         if (!session) {
             throw new DomainException({
                 code: DomainExceptionCode.Unauthorized,
