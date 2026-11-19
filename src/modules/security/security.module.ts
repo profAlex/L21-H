@@ -7,9 +7,12 @@ import { GetActiveSessionsListHandler } from './application/usecases/get-active-
 
 import { DeleteSessionByDeviceIdHandler } from './application/usecases/delete-session-by-device-id.usecase';
 import { SecurityController } from './api/security.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserSession } from '../authorisation/domain/type-orm-session.entity';
 
 @Module({
     imports: [
+        TypeOrmModule.forFeature([UserSession]),
     ],
     controllers: [SecurityController],
     providers: [

@@ -1,18 +1,22 @@
 import {CreateSessionDomainPayload} from "./payload/create-session.domain.payload";
-import {Session} from "./session.entity";
 import {UUIDGeneratorUtil} from "../../../core/uuid-generation/uuid.service";
 import {UpdateSessionDomainDto} from "./dto/update-session.domain.dto";
+import { UserSession } from './type-orm-session.entity';
+import { SQLUserSession } from './sql-session.entity';
 
 describe('SessionEntity unit testing', () => {
     it('createInstance method test. should create new session entity with specified data extracted from dto object', async () => {
         const testDto:CreateSessionDomainPayload = {
             userId: 'some-id',
             deviceName: 'some-device-name',
-            deviceIP: 'test-ip',
+            deviceIp: 'test-ip',
+            deviceId: 'some-id',
+            issuedAt: new Date(),
+            expiresAt: new Date(Date.now() + 3600000), //через час
         }
 
         const spyOnUUIDEntity = jest.spyOn(UUIDGeneratorUtil, 'generateUUID').mockReturnValue('some-mock-uuid');
-        const session = Session.createInstance(testDto);
+        const session = SQLUserSession.createInstance(testDto);
 
         // session.userId = sessionPayload.userId;
         // session.deviceUUID = UUIDGeneratorUtil.generateUUID();
@@ -25,9 +29,9 @@ describe('SessionEntity unit testing', () => {
         // session.deletedAt = null;
 
         expect(session.userId).toBe(testDto.userId);
-        expect(session.deviceUUID).toBe('some-mock-uuid');
+        expect(session.deviceId).toBe('some-mock-uuid');
         expect(session.deviceName).toBe(testDto.deviceName);
-        expect(session.deviceIP).toBe(testDto.deviceIP);
+        expect(session.deviceIp).toBe(testDto.deviceIp);
         expect(session.issuedAt).toBeInstanceOf(Date);
         expect(session.expiresAt).toBeInstanceOf(Date);
         expect(session.createdAt).toBeInstanceOf(Date);
@@ -41,11 +45,14 @@ describe('SessionEntity unit testing', () => {
         const testDto:CreateSessionDomainPayload = {
             userId: 'some-id',
             deviceName: 'some-device-name',
-            deviceIP: 'test-ip',
+            deviceIp: 'test-ip',
+            deviceId: 'some-id',
+            issuedAt: new Date(),
+            expiresAt: new Date(Date.now() + 3600000), //через час
         }
 
         const spyOnUUIDEntity = jest.spyOn(UUIDGeneratorUtil, 'generateUUID').mockReturnValue('some-mock-uuid');
-        const session = Session.createInstance(testDto);
+        const session = SQLUserSession.createInstance(testDto);
 
         session.makeDeleted();
 
@@ -64,11 +71,14 @@ describe('SessionEntity unit testing', () => {
         const testSessionDto:CreateSessionDomainPayload = {
             userId: 'some-id',
             deviceName: 'some-device-name',
-            deviceIP: 'test-ip',
+            deviceIp: 'test-ip',
+            deviceId: 'some-id',
+            issuedAt: new Date(),
+            expiresAt: new Date(Date.now() + 3600000), //через час
         }
 
         const spyOnUUIDEntity = jest.spyOn(UUIDGeneratorUtil, 'generateUUID').mockReturnValue('some-mock-uuid');
-        const session = Session.createInstance(testSessionDto);
+        const session = SQLUserSession.createInstance(testSessionDto);
 
         session.updateSession(testUpdateSessionDto);
 

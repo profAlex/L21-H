@@ -177,35 +177,54 @@ export class UsersCommandRepository {
 
         return userRow.toDomain();
     }
+    //
+    // async SQLfindUserByRecoveryCode(
+    //     recoveryCode: string,
+    // ): Promise<SQLUser | null> {
+    //     const query = `
+    //         SELECT "id",
+    //                "login",
+    //                "email",
+    //                "password_hash",
+    //                "created_at",
+    //                "is_email_confirmed",
+    //                "email_confirmation_code",
+    //                "email_confirmation_expiration_date",
+    //                "recovery_code",
+    //                "recovery_code_expiration_date",
+    //                "deleted_at"
+    //         FROM public."users"
+    //         WHERE "recovery_code" = $1
+    //           AND "recovery_code_expiration_date" >= NOW()
+    //           AND "deleted_at" IS NULL;
+    //     `;
+    //
+    //     const [userRow] = await this.dataSource.query(query, [recoveryCode]);
+    //
+    //     if (!userRow) {
+    //         return null;
+    //     }
+    //
+    //     return SQLUser.reconstruct(userRow);
+    // }
 
     async SQLfindUserByRecoveryCode(
         recoveryCode: string,
     ): Promise<SQLUser | null> {
-        const query = `
-            SELECT "id",
-                   "login",
-                   "email",
-                   "password_hash",
-                   "created_at",
-                   "is_email_confirmed",
-                   "email_confirmation_code",
-                   "email_confirmation_expiration_date",
-                   "recovery_code",
-                   "recovery_code_expiration_date",
-                   "deleted_at"
-            FROM public."users"
-            WHERE "recovery_code" = $1
-              AND "recovery_code_expiration_date" >= NOW()
-              AND "deleted_at" IS NULL;
-        `;
 
-        const [userRow] = await this.dataSource.query(query, [recoveryCode]);
+        const queryBuilder = this.userRepository.createQueryBuilder('u');
+        queryBuilder.where('u.deleted_at IS NULL');
+        queryBuilder.andWhere('u.recovery_code = :passedRecoveryCode',{passedRecoveryCode: recoveryCode} );
+        queryBuilder.andWhere(`u.recovery_code_expiration_date >= CURRENT_TIMESTAM`);
+
+
+        const userRow = await queryBuilder.getOne();
 
         if (!userRow) {
             return null;
         }
 
-        return SQLUser.reconstruct(userRow);
+        return userRow.toDomain();
     }
 
     async SQLfindUserByConfirmationCode(

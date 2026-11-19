@@ -18,8 +18,8 @@ export class User extends BaseDBEntity {
     @Column({ type: 'varchar', length: 255, name: 'first_name', nullable: false })
     first_name: string;
 
-    @Column({ type: 'varchar', length: 255, name: 'last_name', nullable: true })
-    last_name: string | null = null;
+    @Column({ type: 'varchar', length: 255, name: 'last_name', nullable: false })
+    last_name: string;
 
     @Column({ type: 'boolean', default: false, name: 'is_email_confirmed', nullable: false })
     is_email_confirmed: boolean = false;
