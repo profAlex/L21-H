@@ -265,16 +265,19 @@ export class UsersCommandRepository {
     //     return SQLUser.reconstruct(userRow);
     // }
 
-
     async SQLfindUserByConfirmationCode(
         confirmationCode: string,
     ): Promise<SQLUser | null> {
-
         const queryBuilder = this.userRepository.createQueryBuilder('u');
 
-        queryBuilder.where('u.deleted_at IS NULL')
-            .andWhere('u.email_confirmation_code = :passedConfirmationCode', {passedConfirmationCode: confirmationCode})
-            .andWhere('u.email_confirmation_expiration_date >= CURRENT_TIMESTAMP');
+        queryBuilder
+            .where('u.deleted_at IS NULL')
+            .andWhere('u.email_confirmation_code = :passedConfirmationCode', {
+                passedConfirmationCode: confirmationCode,
+            })
+            .andWhere(
+                'u.email_confirmation_expiration_date >= CURRENT_TIMESTAMP',
+            );
 
         const userRow = await queryBuilder.getOne();
 
@@ -284,37 +287,64 @@ export class UsersCommandRepository {
 
         return userRow.toDomain();
     }
-
+    //
+    // async SQLcheckIfUserExists(
+    //     login: string,
+    //     email: string,
+    // ): Promise<'login' | 'email' | null> {
+    //     const checkLoginQuery = `
+    //         SELECT EXISTS (SELECT 1
+    //                        FROM public."users"
+    //                        WHERE "login" = $1
+    //                          AND "deleted_at" IS NULL) as "exists";
+    //     `;
+    //     const [loginResult] = await this.dataSource.query<
+    //         { exists: boolean }[]
+    //     >(checkLoginQuery, [login]);
+    //
+    //     if (loginResult?.exists) {
+    //         return 'login';
+    //     }
+    //
+    //     const checkEmailQuery = `
+    //         SELECT EXISTS (SELECT 1
+    //                        FROM public."users"
+    //                        WHERE "email" = $1
+    //                          AND "deleted_at" IS NULL) as "exists";
+    //     `;
+    //     const [emailResult] = await this.dataSource.query<
+    //         { exists: boolean }[]
+    //     >(checkEmailQuery, [email]);
+    //
+    //     if (emailResult?.exists) {
+    //         return 'email';
+    //     }
+    //
+    //     return null;
+    // }
 
     async SQLcheckIfUserExists(
         login: string,
         email: string,
     ): Promise<'login' | 'email' | null> {
-        const checkLoginQuery = `
-            SELECT EXISTS (SELECT 1
-                           FROM public."users"
-                           WHERE "login" = $1
-                             AND "deleted_at" IS NULL) as "exists";
-        `;
-        const [loginResult] = await this.dataSource.query<
-            { exists: boolean }[]
-        >(checkLoginQuery, [login]);
+        // ищем пользователя у которого совпадает ИЛИ логин, ИЛИ email - используем [] в блоке 'where:[]'
+        const existingUser = await this.userRepository.findOne({
+            where: [
+                { login: login, deleted_at: IsNull() },
+                { email: email, deleted_at: IsNull() },
+            ],
+            select: ['login', 'email'], // выбираем только нужные колонки
+        });
 
-        if (loginResult?.exists) {
+        if (!existingUser) {
+            return null;
+        }
+
+        if (existingUser.login === login) {
             return 'login';
         }
 
-        const checkEmailQuery = `
-            SELECT EXISTS (SELECT 1
-                           FROM public."users"
-                           WHERE "email" = $1
-                             AND "deleted_at" IS NULL) as "exists";
-        `;
-        const [emailResult] = await this.dataSource.query<
-            { exists: boolean }[]
-        >(checkEmailQuery, [email]);
-
-        if (emailResult?.exists) {
+        if (existingUser.email === email) {
             return 'email';
         }
 

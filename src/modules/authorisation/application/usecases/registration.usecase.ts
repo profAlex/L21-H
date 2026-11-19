@@ -27,7 +27,7 @@ export class RegisterUserHandler implements ICommandHandler<RegisterUserCommand>
     ) {}
 
     async execute({ login, password, email }: RegisterUserCommand): Promise<void> {
-        // 1. Проверяем уникальность login и email
+        // проверяем уникальность login и email
         const takenField = await this.usersCommandRepository.SQLcheckIfUserExists(
             login,
             email,
@@ -39,7 +39,7 @@ export class RegisterUserHandler implements ICommandHandler<RegisterUserCommand>
                 message: `User with this ${takenField} already exists`,
                 extensions: [
                     {
-                        message: `${takenField === 'login' ? 'Login' : 'Email'} is already taken`,
+                        message: `${takenField} is already taken`,
                         key: takenField,
                     },
                 ],
