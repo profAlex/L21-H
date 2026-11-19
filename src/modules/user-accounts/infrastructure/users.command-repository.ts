@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { flatten, Injectable, NotFoundException } from '@nestjs/common';
 import { DomainException } from '../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../core/exceptions/domain-exception-codes';
 import { DataSource, IsNull, Repository } from 'typeorm';
@@ -351,24 +351,42 @@ export class UsersCommandRepository {
         return null;
     }
 
+    // async SQLfindNotConfirmedByEmail(
+    //     sentEmail: string,
+    // ): Promise<SQLUser | null> {
+    //     const query = `
+    //         SELECT *
+    //         FROM public.users
+    //         WHERE email = $1
+    //           AND is_email_confirmed = false
+    //           AND deleted_at IS NULL
+    //         LIMIT 1;
+    //     `;
+    //
+    //     const [rawDataFromDb] = await this.dataSource.query(query, [sentEmail]);
+    //
+    //     if (!rawDataFromDb) {
+    //         return null;
+    //     }
+    //
+    //     return SQLUser.reconstruct(rawDataFromDb);
+    // }
+
     async SQLfindNotConfirmedByEmail(
         sentEmail: string,
     ): Promise<SQLUser | null> {
-        const query = `
-            SELECT *
-            FROM public.users
-            WHERE email = $1
-              AND is_email_confirmed = false
-              AND deleted_at IS NULL
-            LIMIT 1;
-        `;
 
-        const [rawDataFromDb] = await this.dataSource.query(query, [sentEmail]);
+        const queryBuilder = this.userRepository.createQueryBuilder('u');
 
-        if (!rawDataFromDb) {
+        queryBuilder.where('u.deleted_at IS NULL');
+        queryBuilder.andWhere('u.email = :passedEmail', {passedEmail: sentEmail});
+        queryBuilder.andWhere('u.is_email_confirmed = :isConfirmed', {isConfirmed: false});
+        const userRow = await queryBuilder.getOne();
+
+        if (!userRow) {
             return null;
         }
 
-        return SQLUser.reconstruct(rawDataFromDb);
+        return userRow.toDomain();
     }
 }
