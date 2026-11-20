@@ -37,11 +37,13 @@ import {
 import { SaBlogsController } from './blogs/api/sa-blogs.controller';
 import { GetCommentByIdHandler } from './comments/application/usecases/get-comment-by-id.usecase';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Blog } from './blogs/domain/type-orm-blog.entity';
+import { Post } from './posts/domain/type-orm-post.entity';
 
 //тут регистрируем провайдеры всех сущностей блоггерской платформы (blogs, posts, comments, etc...)
 @Module({
     imports: [
-        TypeOrmModule.forFeature([]), // здесь надо зарегистрировать сущности-Entity которые мы создаем в соответствующих структурных разделах
+        TypeOrmModule.forFeature([Blog, Post]), // здесь надо зарегистрировать сущности-Entity которые мы создаем в соответствующих структурных разделах
 
         UserAccountsModule,
     ],

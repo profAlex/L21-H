@@ -10,7 +10,7 @@ import { UserSession } from '../../../domain/type-orm-session.entity';
 export class SessionsQueryRepository {
     constructor(
         private readonly dataSource: DataSource,
-        @InjectRepository(User)
+        @InjectRepository(UserSession)
         private readonly userSessionRepository: Repository<UserSession>,
     ) {}
 

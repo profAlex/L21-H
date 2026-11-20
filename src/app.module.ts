@@ -34,7 +34,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
                     },
                     autoLoadEntities: true, // надо поменять на true убдет когда будем полноценно использовать TypeORM
                     synchronize: true, // надо поменять на true убдет когда будем полноценно использовать TypeORM
-                    logging: true,
+                    logging: false,
                 };
             },
         }),

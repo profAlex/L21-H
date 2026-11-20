@@ -63,6 +63,11 @@ export class AuthController {
     ): Promise<{
         accessToken: string;
     }> {
+        // console.warn('--- LOGIN ATTEMPT ---', {
+        //     ip: req.ip,
+        //     userAgent: req.headers['user-agent'],
+        // });
+
         const tokensPair: TokensPair = await this.commandBus.execute<LoginUser>(
             new LoginUser(user.userId, req),
         );

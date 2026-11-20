@@ -30,10 +30,11 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
                     // return request?.cookies?.refreshToken ?? null;
                     // для диагностики
                     const token = request?.cookies?.refreshToken;
-                    console.warn('--- DEBUG STRATEGY ---');
-                    console.warn('[1] Extracting cookie:');
-                    console.warn('  - All cookies in req:', request?.cookies);
-                    console.warn('  - Extracted refreshToken:', token ? `${token.substring(0, 20)}...` : null);
+                    // console.warn('--- DEBUG STRATEGY BEGIN ---');
+                    // console.warn('[1] Extracting cookie:');
+                    // console.warn('  - All cookies in req:', request?.cookies);
+                    // console.warn('  - Extracted refreshToken:', token ? `${token.substring(0, 20)}...` : null);
+                    // console.warn('--- DEBUG STRATEGY END ---');
                     return token ?? null;
                 },
             ]),

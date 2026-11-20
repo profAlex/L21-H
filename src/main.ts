@@ -11,6 +11,16 @@ async function bootstrap() {
     if (!app) {
         app = await NestFactory.create(AppModule);
 
+        // // мидлвар для отлавливания сетевых проблем, в случае каогда например
+        // // Pinggy тоннель не пускал часть запросов с платформы тестов, а я искал проблемы в гвардах сначала
+        // app.use((req:any, res:any, next:any) => {
+        //     console.log(`📥 INCOMING REQUEST: [${req.method}] ${req.url}`, {
+        //         // headers: req.headers,
+        //         // body: req.body,
+        //     });
+        //     next();
+        // });
+
         appSetup(app);
 
         const appConfig = app.get<AppConfig>(AppConfig);
