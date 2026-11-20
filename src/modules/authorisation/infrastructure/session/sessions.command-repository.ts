@@ -167,30 +167,68 @@ export class SessionsCommandRepository {
     }
 
 
+    // async SQLfindSessionByDeviceId(
+    //     deviceId: string,
+    // ): Promise<SQLUserSession | null> {
+    //     const query = `
+    //         SELECT "id",
+    //                "user_id",
+    //                "device_uuid",
+    //                "device_name",
+    //                "device_ip",
+    //                "issued_at",
+    //                "expires_at",
+    //                "created_at",
+    //                "deleted_at"
+    //         FROM public."user_sessions"
+    //         WHERE "device_uuid" = $1
+    //           AND "deleted_at" IS NULL;
+    //     `;
+    //
+    //     const [sessionRow] = await this.dataSource.query(query, [deviceId]);
+    //
+    //
+    //     if (!sessionRow) {
+    //         return null;
+    //     }
+    //
+    //     return SQLUserSession.reconstructInstance(sessionRow);
+    // }
+
+
     async SQLfindSessionByDeviceId(
         deviceId: string,
     ): Promise<SQLUserSession | null> {
-        const query = `
-            SELECT "id",
-                   "user_id",
-                   "device_uuid",
-                   "device_name",
-                   "device_ip",
-                   "issued_at",
-                   "expires_at",
-                   "created_at",
-                   "deleted_at"
-            FROM public."user_sessions"
-            WHERE "device_uuid" = $1
-              AND "deleted_at" IS NULL;
-        `;
 
-        const [sessionRow] = await this.dataSource.query(query, [deviceId]);
+        const sessionRow = await this.userSessionRepository.findOne({
+           where:{device_uuid: deviceId,
+           deleted_at: IsNull()}
+        });
+
 
         if (!sessionRow) {
             return null;
         }
 
-        return SQLUserSession.reconstructInstance(sessionRow);
+        return sessionRow.toDomain();
+    }
+
+
+    async SQLsoftDeleteAllButOneSession(params: {
+        userId: string;
+        sessionId: string;
+    }): Promise<void> {
+        const { userId, sessionId } = params;
+
+        await this.userSessionRepository
+            .createQueryBuilder()
+            .update(UserSession) // указываем инфраструктурную TypeORM-сущность
+            .set({
+                deleted_at: new Date(), // проставляем текущую дату в колонку софт-делита
+            })
+            .where('user_id = :userId', { userId })
+            .andWhere('id != :sessionId', { sessionId }) // исключаем текущую сессию
+            .andWhere('deleted_at IS NULL') //трогаем только те, которые еще не удалены
+            .execute();
     }
 }

@@ -9,15 +9,19 @@ import { DeleteSessionByDeviceIdHandler } from './application/usecases/delete-se
 import { SecurityController } from './api/security.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserSession } from '../authorisation/domain/type-orm-session.entity';
+import {
+    DeleteAllSessionsButCurrentOneHandler
+} from './application/usecases/delete-all-sessions-but-current-one.usecase';
+import { User } from '../user-accounts/domain/type-orm-user.entity';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([UserSession]),
+        TypeOrmModule.forFeature([User, UserSession]),
     ],
     controllers: [SecurityController],
     providers: [
         DeleteSessionByDeviceIdHandler,
-        // DeleteAllSessionsButCurrentOneHandler,
+        DeleteAllSessionsButCurrentOneHandler,
         GetActiveSessionsListHandler,
         JwtRefreshTokenStrategy,
         SessionsCommandRepository,
